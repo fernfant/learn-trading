@@ -35,13 +35,13 @@ long/short → leverage → orders → risk → honest metrics, after costs.
 | 2 | Bid, ask & the spread — there are always two prices | [`02_bid_ask_spread.py`](02_bid_ask_spread.py) | [`02_walkthrough.md`](02_walkthrough.md) ✅ |
 | 3 | Your first trade: long **and** short (CFDs) | [`03_long_and_short.py`](03_long_and_short.py) | [`03_walkthrough.md`](03_walkthrough.md) ✅ |
 | 4 | P&L & equity — what are you worth? | [`04_pnl.py`](04_pnl.py) | [`04_walkthrough.md`](04_walkthrough.md) ✅ |
-| 5 | Leverage & margin — the double-edged sword | `05_leverage_margin.py` | _soon_ |
-| 6 | Order types — market, limit, stop, trailing, GSLO, take-profit | `06_order_types.py` | _soon_ |
-| 7 | Risk & position sizing — don't blow up | `07_risk.py` | _soon_ |
-| 8 | A signal — moving-average crossover (+ honest skepticism) | `08_signal.py` | _soon_ |
-| 9 | Costs that kill — spread + overnight funding + slippage | `09_costs.py` | _soon_ |
-| 10 | Backtesting honestly — return, Sharpe, drawdown | `10_backtest.py` | _soon_ |
-| 11 | **Capstone:** beat buy-and-hold on the sim, *after* spread & fees | `11_capstone.md` | _soon_ |
+| 5 | Leverage & margin — the double-edged sword | [`05_leverage_margin.py`](05_leverage_margin.py) | [`05_walkthrough.md`](05_walkthrough.md) ✅ |
+| 6 | Order types — market, limit, stop, trailing, GSLO, take-profit | [`06_order_types.py`](06_order_types.py) | [`06_walkthrough.md`](06_walkthrough.md) ✅ |
+| 7 | Risk & position sizing — don't blow up | [`07_risk.py`](07_risk.py) | [`07_walkthrough.md`](07_walkthrough.md) ✅ |
+| 8 | A signal — moving-average crossover (+ honest skepticism) | [`08_signal.py`](08_signal.py) | [`08_walkthrough.md`](08_walkthrough.md) ✅ |
+| 9 | Costs that kill — spread + overnight funding + slippage | [`09_costs.py`](09_costs.py) | [`09_walkthrough.md`](09_walkthrough.md) ✅ |
+| 10 | Backtesting honestly — return, Sharpe, drawdown | [`10_backtest.py`](10_backtest.py) | [`10_walkthrough.md`](10_walkthrough.md) ✅ |
+| 11 | **Capstone:** beat buy-and-hold on the sim, *after* spread & fees | [`11_capstone.py`](11_capstone.py) | [`11_capstone.md`](11_capstone.md) ✅ |
 
 ## 🔴 Track 2 — Inside the exchange / HFT → build [`../exchange.py`](../exchange.py)
 

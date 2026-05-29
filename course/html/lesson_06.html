@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>L6 · Order types — Learn to Trade</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .wkrow{display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap}
+  .wkrow canvas{flex:1.5;min-width:340px}
+  .ctrls{flex:1;min-width:280px}
+  .ordrow{display:flex;align-items:center;gap:8px;font-family:ui-monospace,monospace;font-size:13px;
+    padding:7px 0;border-bottom:1px solid var(--line)}
+  .ordrow .dot{width:11px;height:11px;border-radius:50%;flex:0 0 auto}
+  .ordrow .lbl{flex:1;color:var(--ink);font-weight:700}
+  .ordrow .lbl small{display:block;color:var(--dim);font-weight:400;font-size:11px}
+  .ordrow .px{font-weight:700;min-width:62px;text-align:right}
+  .ordrow .adj{display:flex;gap:4px}
+  .ordrow .adj button{padding:2px 9px;border-radius:7px;font-weight:700;line-height:1}
+  .gslo{display:flex;align-items:center;gap:9px;font-family:ui-monospace,monospace;font-size:13px;margin:12px 0 4px}
+  .gslo .sw{width:42px;height:22px;border-radius:999px;background:var(--panel2);border:1px solid var(--line);
+    position:relative;cursor:pointer;transition:background .15s;flex:0 0 auto}
+  .gslo .sw::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;
+    background:var(--dim);transition:left .15s,background .15s}
+  .gslo.on .sw{background:var(--accent)} .gslo.on .sw::after{left:22px;background:#1a1300}
+  .log{font-family:ui-monospace,monospace;font-size:12.5px;line-height:1.7;margin-top:12px;
+    max-height:170px;overflow-y:auto;border:1px solid var(--line);border-radius:9px;padding:8px 12px;background:var(--code-bg)}
+  .log .ev{padding:1px 0}
+  .log .d{color:var(--dim)}
+  .up3{color:var(--up2);font-weight:700} .down3{color:var(--down2);font-weight:700}
+  .gold{color:var(--accent);font-weight:700}
+  .gapnote{font-family:ui-monospace,monospace;font-size:13px;color:var(--dim);margin-top:6px;min-height:20px}
+  button:disabled{opacity:.4;cursor:not-allowed;filter:none}
+  .legend{font-family:ui-monospace,monospace;font-size:12px;color:var(--dim);margin:8px 0 0;display:flex;gap:16px;flex-wrap:wrap}
+  .legend span{display:flex;align-items:center;gap:5px}
+  .legend i{width:14px;height:3px;border-radius:2px;display:inline-block}
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <a href="index.html" class="brand">📈 Learn to Trade</a>
+  <div class="lesson-pills">
+    <a href="index.html">Index</a>
+    <a class="t1" href="lesson_00.html">L0</a>
+    <a class="t1" href="lesson_01.html">L1</a>
+    <a class="t1" href="lesson_02.html">L2</a>
+    <a class="t1" href="lesson_03.html">L3</a>
+    <a class="t1" href="lesson_04.html">L4</a>
+    <a class="t1" href="lesson_05.html">L5</a>
+    <a class="t1 current" href="lesson_06.html">L6</a>
+    <a class="t1" href="lesson_07.html">L7</a>
+    <a class="t1" href="lesson_08.html">L8</a>
+    <a class="t1" href="lesson_09.html">L9</a>
+    <a class="t1" href="lesson_10.html">L10</a>
+    <a class="t1" href="lesson_11.html">L11🏆</a>
+    <a class="t2" href="index.html#track2">T2</a>
+  </div>
+</nav>
+
+<div class="wrap">
+
+<h1>Lesson 6 · Order types — fill on <em>your</em> terms</h1>
+<p class="subtitle">Every trade so far filled <em>now, at the current price</em> — a <strong>market</strong>
+order. But the platform's menu has six entries, each a different answer to <em>when should this fill, and at
+what price?</em> A <strong>limit</strong> waits for your price. A <strong>stop</strong> fires when a level is
+crossed. A <strong>trailing stop</strong> follows you up. A <strong>take-profit</strong> banks a gain. And a
+<strong>GSLO</strong> is a stop that can't be slipped by a gap — for a fee.</p>
+
+<div class="demo">
+  <h3>🎚️ Place your orders, then run the market</h3>
+  <p class="subtitle" style="margin:4px 0 12px">You're long 10 units from the entry. Drag each order line with
+  <b>+/−</b> to set it relative to the current price, then hit <b>Run</b>. Watch the day each order fires and the
+  price flash where it filled. Toggle the <b style="color:var(--accent)">GSLO</b> on to see what a guaranteed stop
+  does when the market <b>gaps</b>.</p>
+  <div class="wkrow">
+    <canvas id="chart" width="900" height="260"></canvas>
+    <div class="ctrls">
+
+      <div class="ordrow">
+        <span class="dot" style="background:#34d399"></span>
+        <span class="lbl">Limit buy-the-dip<small>fills at your price or better</small></span>
+        <span class="px" id="px-limit">$98.50</span>
+        <span class="adj"><button data-ord="limit" data-d="-1">−</button><button data-ord="limit" data-d="1">＋</button></span>
+      </div>
+
+      <div class="ordrow">
+        <span class="dot" style="background:#f0b429"></span>
+        <span class="lbl">Take-profit<small>auto-close the long for a gain</small></span>
+        <span class="px" id="px-tp">$103.00</span>
+        <span class="adj"><button data-ord="tp" data-d="-1">−</button><button data-ord="tp" data-d="1">＋</button></span>
+      </div>
+
+      <div class="ordrow">
+        <span class="dot" style="background:#f87171"></span>
+        <span class="lbl">Stop-loss<small>cut the loss if it falls through</small></span>
+        <span class="px" id="px-stop">$97.50</span>
+        <span class="adj"><button data-ord="stop" data-d="-1">−</button><button data-ord="stop" data-d="1">＋</button></span>
+      </div>
+
+      <div class="ordrow">
+        <span class="dot" style="background:#58a6ff"></span>
+        <span class="lbl">Trailing stop<small>distance below the high, ratchets up</small></span>
+        <span class="px" id="px-trail">$1.50</span>
+        <span class="adj"><button data-ord="trail" data-d="-1">−</button><button data-ord="trail" data-d="1">＋</button></span>
+      </div>
+
+      <div class="gslo" id="gslo-toggle"><div class="sw"></div><span id="gslo-label">guaranteed stop (GSLO): OFF</span></div>
+
+      <div class="btnrow">
+        <button id="run">⏩ Run market</button>
+        <button id="gap" class="down">⚡ Run with a gap</button>
+        <button id="reset">↻ Reset orders</button>
+      </div>
+      <div class="gapnote" id="gapnote"></div>
+    </div>
+  </div>
+  <div class="legend">
+    <span><i style="background:#58a6ff"></i> price</span>
+    <span><i style="background:#34d399"></i> limit</span>
+    <span><i style="background:#f0b429"></i> take-profit</span>
+    <span><i style="background:#f87171"></i> stop / trail</span>
+  </div>
+  <div class="log" id="log"><div class="ev d">orders armed — press Run.</div></div>
+</div>
+
+<div class="callout info">
+  💡 <strong>A limit gives you price, a market gives you certainty.</strong> The limit buy only fills if the price
+  comes to <em>you</em> — a better entry, but it can sit there forever. A market order always fills, but never at a
+  price you chose. Every order on the menu is a point on that trade-off.
+</div>
+
+<div class="callout warn">
+  <strong>A stop promises to <em>fire</em>, not to fill at its price.</strong> Press <em>Run with a gap</em>: the
+  market leaps overnight straight through your stop, and a plain stop fills at the next available price — well past
+  where you set it. That extra loss is <strong>slippage</strong>. Flip the <strong>GSLO</strong> on and run the gap
+  again: it fills at <em>exactly</em> your level, because you paid a premium for that guarantee. No free lunch — just
+  a choice about who carries the gap risk.
+</div>
+
+<div class="recap">
+  <div class="r-title">✅ You can now say…</div>
+  <ul>
+    <li><strong>Market</strong> = fill now, no price control. <strong>Limit</strong> = your price or better, but may never fill.</li>
+    <li><strong>Stop</strong> = becomes a market order once a trigger is crossed (cut losses or enter on a breakout).</li>
+    <li><strong>Trailing stop</strong> follows the price up and only ratchets one way, locking in profit.</li>
+    <li><strong>Take-profit</strong> auto-banks a gain; a <strong>GSLO</strong> fills at exactly its trigger even on a gap, for a fee.</li>
+    <li>The line you added to <code>market.py</code>: each day, <em>check triggers</em> — a stop-loss and take-profit that close the position when the mark crosses them.</li>
+  </ul>
+</div>
+
+<p style="margin-top:24px">
+  <a href="lesson_05.html">← L5: Leverage &amp; margin</a> &nbsp;·&nbsp;
+  <a href="lesson_07.html"><strong>L7: Risk &amp; position sizing — don't blow up →</strong></a>
+</p>
+
+</div>
+
+<footer class="site">
+  Built by <a href="https://github.com/fernfant">@fernfant</a> ·
+  <a href="https://github.com/fernfant/learn-trading">source on GitHub</a> · MIT licensed
+</footer>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  function gauss(){ let u=0,v=0; while(!u)u=Math.random(); while(!v)v=Math.random();
+    return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+
+  const cv = $('chart'), ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height, PAD = 34;
+  const ENTRY_MID = 100, SPREAD = 0.10, QTY = 10, DAYS = 14, TRAIL_DIST_DEFAULT = 1.5;
+
+  // order levels (mid prices, except trailDist which is a distance)
+  let limit, tp, stop, trailDist, gslo;
+  let path = [], events = [];   // events: {day, kind, text, y, color}
+
+  function reset(){
+    limit = 98.5; tp = 103.0; stop = 97.5; trailDist = TRAIL_DIST_DEFAULT; gslo = false;
+    path = [ENTRY_MID]; events = [];
+    $('gslo-toggle').classList.remove('on');
+    $('gslo-label').textContent = 'guaranteed stop (GSLO): OFF';
+    $('gapnote').textContent = '';
+    setLog([{cls:'d', html:'orders armed — press Run.'}]);
+    paintLevels(); draw();
+  }
+
+  function paintLevels(){
+    $('px-limit').textContent = '$'+limit.toFixed(2);
+    $('px-tp').textContent    = '$'+tp.toFixed(2);
+    $('px-stop').textContent  = '$'+stop.toFixed(2);
+    $('px-trail').textContent = '$'+trailDist.toFixed(2);
+  }
+
+  function setLog(items){
+    $('log').innerHTML = items.map(i=>`<div class="ev ${i.cls||''}">${i.html}</div>`).join('');
+    $('log').scrollTop = $('log').scrollHeight;
+  }
+
+  // build a price path; gap=true bakes a sharp overnight drop on day 8
+  function buildPath(gap){
+    const p = [ENTRY_MID];
+    for(let d=1; d<=DAYS; d++){
+      let shock = gauss()*1.1 + 0.15;        // mild upward drift + noise
+      if(gap && d===8) shock = -5.6;          // overnight gap down through the stops
+      p.push(+(p[d-1]+shock).toFixed(2));
+    }
+    return p;
+  }
+
+  // simulate orders over the path. long 10 from the entry ask.
+  function simulate(gap){
+    path = buildPath(gap);
+    events = [];
+    const entryAsk = ENTRY_MID + SPREAD/2;    // long opens at the ask
+    let limitFilled=false, closed=false;
+    let high=ENTRY_MID, trailStop=ENTRY_MID - trailDist;  // arms once price advances
+
+    for(let d=1; d<=DAYS && !closed; d++){
+      const m = path[d], ask = m+SPREAD/2, bid = m-SPREAD/2;
+
+      // limit buy-the-dip: a separate resting order, fires once
+      if(!limitFilled && ask <= limit){
+        limitFilled = true;
+        events.push({day:d, kind:'limit', mid:m, color:'#34d399',
+          text:`Limit buy filled @ $${ask.toFixed(2)} — the dip came to you.`});
+      }
+
+      // trailing stop ratchets up on new highs
+      if(m > high){ high = m; const ns = m - trailDist; if(ns > trailStop) trailStop = ns; }
+
+      // which exit fires first this day? evaluate in price order.
+      if(m >= tp){
+        const pnl = QTY*(bid - entryAsk);
+        events.push({day:d, kind:'tp', mid:m, color:'#f0b429',
+          text:`Take-profit hit → sell @ $${bid.toFixed(2)}, P&L <b class="up3">+$${pnl.toFixed(2)}</b>.`});
+        closed = true;
+      } else if(m <= trailStop && trailStop > stop){
+        // trailing stop is above the fixed stop, so it triggers first
+        const fill = bid, pnl = QTY*(fill - entryAsk);
+        events.push({day:d, kind:'trail', mid:m, color:'#58a6ff',
+          text:`Trailing stop hit (trail $${trailStop.toFixed(2)}) → sell @ $${fill.toFixed(2)}, `
+            + `P&L <b class="${pnl>=0?'up3':'down3'}">${pnl>=0?'+':''}$${pnl.toFixed(2)}</b>.`});
+        closed = true;
+      } else if(m <= stop){
+        // fixed stop-loss. plain stop = next market price; GSLO = exact trigger.
+        let fill, label;
+        const gapped = bid < stop - 0.2;       // did we blow well past the trigger?
+        if(gslo){ fill = stop; label = `GSLO honoured @ <b class="gold">$${stop.toFixed(2)}</b> (−$1.20 premium)`; }
+        else    { fill = bid;  label = gapped
+                    ? `Plain stop SLIPPED → sell @ <b class="down3">$${bid.toFixed(2)}</b> (not $${stop.toFixed(2)}!)`
+                    : `Stop-loss hit → sell @ $${bid.toFixed(2)}`; }
+        let pnl = QTY*(fill - entryAsk); if(gslo) pnl -= 1.20;
+        events.push({day:d, kind:'stop', mid:m, color:'#f87171',
+          text:`${label}, P&L <b class="${pnl>=0?'up3':'down3'}">${pnl>=0?'+':''}$${pnl.toFixed(2)}</b>.`});
+        closed = true;
+      }
+    }
+    if(!closed) events.push({day:DAYS, kind:'open', mid:path[DAYS], color:'#9aa7b4',
+      text:`No exit triggered — position still open at $${path[DAYS].toFixed(2)}.`});
+    return {gap};
+  }
+
+  function run(gap){
+    const {gap:wasGap} = simulate(gap);
+    draw();
+    const log = [{cls:'d', html:`long 10 @ $${(ENTRY_MID+SPREAD/2).toFixed(2)} · stepped ${DAYS} days`
+      + (wasGap?' · <span class="down3">overnight gap on day 8</span>':'')}];
+    events.forEach(e => log.push({html:`<span class="d">day ${e.day}:</span> ${e.text}`}));
+    setLog(log);
+    // gap commentary
+    const stopEv = events.find(e=>e.kind==='stop');
+    if(wasGap && stopEv){
+      $('gapnote').innerHTML = gslo
+        ? 'GSLO filled at your exact level despite the gap — the premium earned its keep.'
+        : 'The gap blew past your stop; it filled below your level. Flip the GSLO on and run the gap again.';
+    } else if(wasGap){
+      $('gapnote').textContent = 'No stop fired this run — the gap missed your levels.';
+    } else {
+      $('gapnote').textContent = '';
+    }
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    const lvls = [limit, tp, stop, ...path];
+    let lo=Math.min(...lvls), hi=Math.max(...lvls);
+    if(hi-lo < 8){ const c=(hi+lo)/2; lo=c-4; hi=c+4; }
+    const pad=(hi-lo)*0.12; lo-=pad; hi+=pad;
+    const x = i => PAD + i*(W-2*PAD)/DAYS;
+    const y = v => PAD + (1-(v-lo)/(hi-lo))*(H-2*PAD);
+
+    // horizontal order lines
+    const lines = [
+      {v:limit, c:'#34d399', t:'limit'},
+      {v:tp,    c:'#f0b429', t:'take-profit'},
+      {v:stop,  c:'#f87171', t:'stop'},
+    ];
+    ctx.setLineDash([4,4]); ctx.lineWidth=1; ctx.font='11px ui-monospace,monospace';
+    lines.forEach(L => {
+      if(L.v<lo||L.v>hi) return;
+      ctx.strokeStyle=L.c; ctx.beginPath(); ctx.moveTo(PAD,y(L.v)); ctx.lineTo(W-PAD,y(L.v)); ctx.stroke();
+      ctx.fillStyle=L.c; ctx.textAlign='left'; ctx.fillText(L.t+' $'+L.v.toFixed(2), PAD+2, y(L.v)-4);
+    });
+    ctx.setLineDash([]);
+
+    // price path
+    ctx.strokeStyle='#58a6ff'; ctx.lineWidth=2; ctx.beginPath();
+    path.forEach((v,i)=>{ i?ctx.lineTo(x(i),y(v)):ctx.moveTo(x(i),y(v)); }); ctx.stroke();
+    // entry dot
+    ctx.fillStyle='#58a6ff'; ctx.beginPath(); ctx.arc(x(0),y(path[0]),3.5,0,7); ctx.fill();
+
+    // fill markers
+    events.forEach(e => {
+      if(e.day>=path.length) return;
+      const px=x(e.day), py=y(path[e.day]);
+      ctx.strokeStyle=e.color; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(px,py,7,0,7); ctx.stroke();
+      ctx.fillStyle=e.color; ctx.beginPath(); ctx.arc(px,py,3.5,0,7); ctx.fill();
+      ctx.fillStyle=e.color; ctx.textAlign='center'; ctx.font='10px ui-monospace,monospace';
+      ctx.fillText('▲ '+e.kind, px, py-12);
+    });
+  }
+
+  // +/- adjusters
+  document.querySelectorAll('.adj button').forEach(b => {
+    b.onclick = () => {
+      const ord=b.dataset.ord, step=+b.dataset.d*0.5;
+      if(ord==='limit') limit=+(limit+step).toFixed(2);
+      else if(ord==='tp') tp=+(tp+step).toFixed(2);
+      else if(ord==='stop') stop=+(stop+step).toFixed(2);
+      else if(ord==='trail') trailDist=Math.max(0.5,+(trailDist+step).toFixed(2));
+      paintLevels(); draw();
+    };
+  });
+
+  $('gslo-toggle').onclick = () => {
+    gslo=!gslo;
+    $('gslo-toggle').classList.toggle('on',gslo);
+    $('gslo-label').textContent='guaranteed stop (GSLO): '+(gslo?'ON':'OFF');
+  };
+  $('run').onclick=()=>run(false);
+  $('gap').onclick=()=>run(true);
+  $('reset').onclick=reset;
+  reset();
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>L10 · Backtesting honestly — Learn to Trade</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .wkrow{display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap}
+  .wkrow canvas{flex:1.5;min-width:320px}
+  .ctrls{flex:1;min-width:280px}
+  .sld{margin:12px 0}
+  .sld label{display:flex;justify-content:space-between;font-family:ui-monospace,monospace;
+    font-size:13px;margin-bottom:4px}
+  .sld label .v{color:var(--accent);font-weight:700}
+  .sld input[type=range]{width:100%;accent-color:var(--accent)}
+  .metrics{display:flex;gap:10px;margin:14px 0 2px}
+  .metric{flex:1;border:1px solid var(--line);border-radius:11px;padding:10px 12px;background:var(--panel2);text-align:center}
+  .metric .k{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.04em}
+  .metric .val{font-size:22px;font-weight:800;font-family:ui-monospace,monospace;margin-top:3px}
+  .up3{color:var(--up2);font-weight:700} .down3{color:var(--down2);font-weight:700}
+  .acct{font-family:ui-monospace,monospace;line-height:1.6;margin:14px 0 2px}
+  .acct .row{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--line)}
+  .acct .row span:first-child{color:var(--dim)}
+  .acct .row b{color:var(--ink)}
+  .verdict{font-family:ui-monospace,monospace;font-size:14px;font-weight:700;margin-top:10px;
+    padding:8px 12px;border-radius:9px;border:1px solid var(--line)}
+  .verdict.win{background:#13241d44;border-color:#1f5e4a;color:var(--up2)}
+  .verdict.lose{background:#23151644;border-color:#6e2b2e;color:var(--down2)}
+  .legend{font-family:ui-monospace,monospace;font-size:12px;color:var(--dim);margin-top:6px}
+  .legend .swatch{display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:-1px;margin:0 3px 0 12px}
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <a href="index.html" class="brand">📈 Learn to Trade</a>
+  <div class="lesson-pills">
+    <a href="index.html">Index</a>
+    <a class="t1" href="lesson_00.html">L0</a>
+    <a class="t1" href="lesson_01.html">L1</a>
+    <a class="t1" href="lesson_02.html">L2</a>
+    <a class="t1" href="lesson_03.html">L3</a>
+    <a class="t1" href="lesson_04.html">L4</a>
+    <a class="t1" href="lesson_05.html">L5</a>
+    <a class="t1" href="lesson_06.html">L6</a>
+    <a class="t1" href="lesson_07.html">L7</a>
+    <a class="t1" href="lesson_08.html">L8</a>
+    <a class="t1" href="lesson_09.html">L9</a>
+    <a class="t1 current" href="lesson_10.html">L10</a>
+    <a class="t1" href="lesson_11.html">L11🏆</a>
+    <a class="t2" href="index.html#track2">T2</a>
+  </div>
+</nav>
+
+<div class="wrap">
+
+<h1>Lesson 10 · Backtesting honestly — return, Sharpe &amp; drawdown</h1>
+<p class="subtitle">You have a strategy. The last question before you risk a cent: <em>is it any good — and
+how would I know?</em> Three numbers describe almost any strategy, all read off the <strong>equity
+curve</strong>: <strong>total return</strong> (the headline), <strong>Sharpe</strong> (return per unit of
+wobble), and <strong>max drawdown</strong> (the worst peak-to-trough fall — the pain). Then the trap that
+kills most backtests: tuning on the past (<em>in-sample</em>) and mistaking it for skill on the future
+(<em>out-of-sample</em>).</p>
+
+<div class="demo">
+  <h3>📉 Tune on the past, then meet the future</h3>
+  <p class="subtitle" style="margin:4px 0 12px">Drag the <b style="color:var(--accent)">split</b> to set how
+  much history you tune on. The page tries every lookback and picks the one with the best
+  <b style="color:var(--up2)">in-sample</b> Sharpe — then reveals how that same setting does on the
+  <b style="color:var(--down2)">out-of-sample</b> half it never saw. The shaded band is the
+  <b style="color:var(--down2)">max drawdown</b>. Hit <b>New data</b> to watch how unstable it all is.</p>
+  <div class="wkrow">
+    <canvas id="chart" width="900" height="270"></canvas>
+    <div class="ctrls">
+      <div class="sld">
+        <label><span>in-sample / out-of-sample split</span><span class="v" id="v-split">50%</span></label>
+        <input type="range" id="s-split" min="20" max="80" step="5" value="50">
+      </div>
+      <div class="acct">
+        <div class="row"><span>best lookback (tuned in-sample)</span><b id="a-lb">–</b></div>
+        <div class="row"><span>in-sample Sharpe</span><b id="a-is" class="up3">–</b></div>
+        <div class="row"><span>out-of-sample Sharpe</span><b id="a-oos" class="down3">–</b></div>
+      </div>
+      <div class="metrics">
+        <div class="metric"><div class="k">return (OOS)</div><div class="val" id="m-ret">–</div></div>
+        <div class="metric"><div class="k">Sharpe (OOS)</div><div class="val" id="m-sh">–</div></div>
+        <div class="metric"><div class="k">max DD (OOS)</div><div class="val" id="m-dd">–</div></div>
+      </div>
+      <div class="verdict lose" id="a-verdict">…</div>
+      <div class="legend">
+        <span class="swatch" style="background:#34d399"></span>in-sample
+        <span class="swatch" style="background:#f87171"></span>out-of-sample
+        <span class="swatch" style="background:#f8717133"></span>drawdown
+      </div>
+      <div class="btnrow">
+        <button id="reseed">🎲 New data (reseed)</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="callout warn">
+  <strong>This is overfitting.</strong> The best in-sample setting almost never wins out-of-sample — on a
+  near-random price path (Lesson 1) you're just fitting noise. Reseed a few times: the "best" lookback jumps
+  around and the OOS numbers swing wildly. A result that won't sit still isn't an edge.
+</div>
+
+<div class="callout info">
+  💡 In <code>market.py</code> the post-loop metrics block computes <code>returns()</code>,
+  <code>sharpe()</code> and <code>max_drawdown()</code> over the daily <code>equity_curve</code> and prints
+  them beside buy-and-hold — the honest scoreboard, <em>after</em> the Lesson 9 costs. The capstone makes the
+  out-of-sample test real: beat buy-and-hold on data the strategy never saw.
+</div>
+
+<div class="recap">
+  <div class="r-title">✅ You can now say…</div>
+  <ul>
+    <li><strong>Total return</strong> is the headline; it hides <em>how</em> you got there.</li>
+    <li><strong>Sharpe</strong> = mean daily return ÷ its std × √252 — reward per unit of wobble (&gt;1 is decent).</li>
+    <li><strong>Max drawdown</strong> is the worst peak-to-trough fall — the pain that decides if you'd have held on.</li>
+    <li><strong>In-sample</strong> = data you tuned on; <strong>out-of-sample</strong> = unseen data you judge on.</li>
+    <li>Tuning to look great in-sample is <strong>overfitting</strong>; only the out-of-sample score is honest.</li>
+  </ul>
+</div>
+
+<p style="margin-top:24px">
+  <a href="lesson_09.html">← L9: Costs that kill</a> &nbsp;·&nbsp;
+  <a href="lesson_11.html"><strong>L11: Capstone — beat buy-and-hold 🏆 →</strong></a>
+</p>
+
+</div>
+
+<footer class="site">
+  Built by <a href="https://github.com/fernfant">@fernfant</a> ·
+  <a href="https://github.com/fernfant/learn-trading">source on GitHub</a> · MIT licensed
+</footer>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+
+  const N = 504, QTY = 10, START = 1000, ANN = 252;
+  const PARAMS = [5, 10, 20, 40, 60];
+
+  // Seeded RNG so a given price path is stable while you drag the split.
+  // "New data" just advances the seed. gauss() is Box-Muller over the stream.
+  let SEED = 8;
+  function makePath(seed){
+    let s = (seed * 2654435761) & 0x7fffffff;
+    const rand = () => { s = (s*1103515245 + 12345) & 0x7fffffff; return s/0x7fffffff; };
+    const gauss = () => { let u=0,v=0; while(!u)u=rand(); while(!v)v=rand();
+      return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); };
+    let p = 100, path = [];
+    for(let i=0;i<N;i++){ p += 0.02 + gauss(); path.push(p); }
+    return path;
+  }
+  let PATH = makePath(SEED);
+
+  // Momentum rule → daily equity curve (long QTY when price > price `lb` days ago).
+  function backtest(path, lb){
+    let eq = START; const curve = [eq];
+    for(let t=1;t<path.length;t++){
+      const inMkt = t > lb && path[t-1] > path[t-1-lb];
+      eq += (inMkt ? QTY : 0) * (path[t]-path[t-1]);
+      curve.push(eq);
+    }
+    return curve;
+  }
+  function dailyReturns(c){
+    const r=[]; for(let i=1;i<c.length;i++){ if(c[i-1]) r.push(c[i]/c[i-1]-1); } return r;
+  }
+  function sharpe(r){
+    if(r.length<2) return 0;
+    const m = r.reduce((a,b)=>a+b,0)/r.length;
+    const v = r.reduce((a,b)=>a+(b-m)*(b-m),0)/(r.length-1);
+    const sd = Math.sqrt(v);
+    return sd ? (m/sd)*Math.sqrt(ANN) : 0;
+  }
+  function totalReturn(c){ return c[c.length-1]/c[0]-1; }
+  function maxDrawdown(c){
+    let peak=c[0], worst=0;
+    for(const v of c){ peak=Math.max(peak,v); worst=Math.min(worst, v/peak-1); }
+    return worst;
+  }
+
+  const cv = $('chart'), ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height, PAD = 36;
+
+  function compute(){
+    const splitPct = +$('s-split').value;
+    const split = Math.round(N * splitPct/100);
+    const isPath = PATH.slice(0, split);
+    const oosPath = PATH.slice(split);
+    // tune: pick lookback with best IN-SAMPLE Sharpe
+    let best = null;
+    for(const lb of PARAMS){
+      const sh = sharpe(dailyReturns(backtest(isPath, lb)));
+      if(best===null || sh>best.isSh) best = {lb, isSh:sh};
+    }
+    // judge the winner out-of-sample
+    const isCurve = backtest(isPath, best.lb);
+    const oosCurve = backtest(oosPath, best.lb);
+    const oosSh = sharpe(dailyReturns(oosCurve));
+    return {
+      split, isCurve, oosCurve, lb:best.lb, isSh:best.isSh, oosSh,
+      ret: totalReturn(oosCurve), dd: maxDrawdown(oosCurve)
+    };
+  }
+
+  function draw(r){
+    ctx.clearRect(0,0,W,H);
+    // one continuous account: in-sample curve then out-of-sample curve stitched on
+    const full = r.isCurve.concat(r.oosCurve.slice(1).map(v => v - r.oosCurve[0] + r.isCurve[r.isCurve.length-1]));
+    const n = full.length - 1 || 1;
+    let lo=Math.min(...full), hi=Math.max(...full);
+    if(hi-lo < 40){ const c=(hi+lo)/2; lo=c-20; hi=c+20; }
+    const pad=(hi-lo)*0.12; lo-=pad; hi+=pad;
+    const x = i => PAD + i*(W-2*PAD)/n;
+    const y = v => PAD + (1-(v-lo)/(hi-lo))*(H-2*PAD);
+    const splitIdx = r.isCurve.length - 1;
+
+    // start reference
+    ctx.strokeStyle='#5a636e'; ctx.setLineDash([4,4]); ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(PAD,y(START)); ctx.lineTo(W-PAD,y(START)); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle='#7d8895'; ctx.font='11px ui-monospace,monospace'; ctx.textAlign='left';
+    ctx.fillText('start $'+START, PAD+2, y(START)-4);
+
+    // OOS drawdown shading: from running-peak down to the curve, over the OOS leg
+    let peakV = full[splitIdx], peakX = splitIdx;
+    let trough = {dd:0};
+    for(let i=splitIdx;i<full.length;i++){
+      if(full[i] > peakV){ peakV = full[i]; peakX = i; }
+      const dd = full[i]/peakV - 1;
+      if(dd < trough.dd){ trough = {dd, i, peakV, peakX}; }
+    }
+    if(trough.dd < 0){
+      ctx.fillStyle='#f8717133';
+      ctx.beginPath();
+      ctx.moveTo(x(trough.peakX), y(trough.peakV));
+      ctx.lineTo(x(trough.i), y(trough.peakV));
+      ctx.lineTo(x(trough.i), y(full[trough.i]));
+      ctx.closePath(); ctx.fill();
+    }
+
+    // split divider
+    ctx.strokeStyle='#5a636e'; ctx.setLineDash([2,3]); ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(x(splitIdx),PAD-6); ctx.lineTo(x(splitIdx),H-PAD); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle='#7d8895'; ctx.textAlign='center';
+    ctx.fillText('split', x(splitIdx), PAD-10);
+
+    // in-sample leg (green)
+    ctx.strokeStyle='#34d399'; ctx.lineWidth=2; ctx.beginPath();
+    for(let i=0;i<=splitIdx;i++){ i?ctx.lineTo(x(i),y(full[i])):ctx.moveTo(x(i),y(full[i])); }
+    ctx.stroke();
+    // out-of-sample leg (red)
+    ctx.strokeStyle='#f87171'; ctx.lineWidth=2; ctx.beginPath();
+    for(let i=splitIdx;i<full.length;i++){ i===splitIdx?ctx.moveTo(x(i),y(full[i])):ctx.lineTo(x(i),y(full[i])); }
+    ctx.stroke();
+
+    ctx.fillStyle='#34d399'; ctx.textAlign='left';
+    ctx.fillText('tuned here (in-sample)', PAD+4, H-PAD+18);
+    ctx.fillStyle='#f87171'; ctx.textAlign='right';
+    ctx.fillText('judged here (out-of-sample) →', W-PAD-2, H-PAD+18);
+  }
+
+  function paint(){
+    const r = compute();
+    $('v-split').textContent = $('s-split').value + '%';
+    $('a-lb').textContent = r.lb;
+    $('a-is').textContent = r.isSh.toFixed(2);
+    $('a-oos').textContent = r.oosSh.toFixed(2);
+    $('a-is').className = r.isSh>=0?'up3':'down3';
+    $('a-oos').className = r.oosSh>=0?'up3':'down3';
+
+    const ret = r.ret*100;
+    $('m-ret').textContent = (ret>=0?'+':'')+ret.toFixed(1)+'%';
+    $('m-ret').className = 'val ' + (ret>=0?'up3':'down3');
+    $('m-sh').textContent = r.oosSh.toFixed(2);
+    $('m-sh').className = 'val ' + (r.oosSh>=0?'up3':'down3');
+    $('m-dd').textContent = (r.dd*100).toFixed(1)+'%';
+    $('m-dd').className = 'val down3';
+
+    const vd = $('a-verdict');
+    if(r.oosSh >= r.isSh){
+      vd.className='verdict win';
+      vd.textContent='🍀 OOS held up this time — pure luck on this path. Reseed and watch it break.';
+    } else {
+      vd.className='verdict lose';
+      vd.textContent='💀 the tuned winner fell apart out-of-sample — that’s overfitting, not skill';
+    }
+    draw(r);
+  }
+
+  $('s-split').addEventListener('input', paint);
+  $('reseed').onclick = () => { SEED += 1; PATH = makePath(SEED); paint(); };
+  paint();
+})();
+</script>
+
+</body>
+</html>

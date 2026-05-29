@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>L9 · Costs that kill — Learn to Trade</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .wkrow{display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap}
+  .wkrow canvas{flex:1.5;min-width:320px}
+  .ctrls{flex:1;min-width:280px}
+  .sld{margin:12px 0}
+  .sld label{display:flex;justify-content:space-between;font-family:ui-monospace,monospace;
+    font-size:13px;margin-bottom:4px}
+  .sld label .v{color:var(--accent);font-weight:700}
+  .sld input[type=range]{width:100%;accent-color:var(--accent)}
+  .acct{font-family:ui-monospace,monospace;line-height:1.6;margin:14px 0 2px}
+  .acct .row{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--line)}
+  .acct .row span:first-child{color:var(--dim)}
+  .acct .row b{color:var(--ink)}
+  .netbig{font-size:30px;font-weight:800;font-family:ui-monospace,monospace;margin:8px 0 2px}
+  .up3{color:var(--up2);font-weight:700} .down3{color:var(--down2);font-weight:700}
+  .verdict{font-family:ui-monospace,monospace;font-size:14px;font-weight:700;margin-top:6px;
+    padding:8px 12px;border-radius:9px;border:1px solid var(--line)}
+  .verdict.win{background:#13241d44;border-color:#1f5e4a;color:var(--up2)}
+  .verdict.flat{background:var(--panel2);color:var(--dim)}
+  .verdict.lose{background:#23151644;border-color:#6e2b2e;color:var(--down2)}
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <a href="index.html" class="brand">📈 Learn to Trade</a>
+  <div class="lesson-pills">
+    <a href="index.html">Index</a>
+    <a class="t1" href="lesson_00.html">L0</a>
+    <a class="t1" href="lesson_01.html">L1</a>
+    <a class="t1" href="lesson_02.html">L2</a>
+    <a class="t1" href="lesson_03.html">L3</a>
+    <a class="t1" href="lesson_04.html">L4</a>
+    <a class="t1" href="lesson_05.html">L5</a>
+    <a class="t1" href="lesson_06.html">L6</a>
+    <a class="t1" href="lesson_07.html">L7</a>
+    <a class="t1" href="lesson_08.html">L8</a>
+    <a class="t1 current" href="lesson_09.html">L9</a>
+    <a class="t1" href="lesson_10.html">L10</a>
+    <a class="t1" href="lesson_11.html">L11🏆</a>
+    <a class="t2" href="index.html#track2">T2</a>
+  </div>
+</nav>
+
+<div class="wrap">
+
+<h1>Lesson 9 · Costs that kill — spread, swap &amp; slippage</h1>
+<p class="subtitle">You have a signal now. On paper it makes money. So why does capital.com's own
+warning say the <em>large majority of retail CFD accounts lose</em>? Because of three quiet costs a
+"gross" backtest never shows: the <strong>spread</strong> (paid every round trip), the
+<strong>overnight swap</strong> (paid every day held), and <strong>slippage</strong> (paid on every fill).
+None is dramatic alone. Stacked, they decide who wins.</p>
+
+<div class="demo">
+  <h3>📉 The same edge, dying under realistic costs</h3>
+  <p class="subtitle" style="margin:4px 0 12px">The curve below is <em>one fixed gross edge</em> — a
+  genuinely profitable strategy <b style="color:var(--up2)">before</b> costs. Drag the four sliders up and
+  watch it bend from <b style="color:var(--up2)">rising green</b> to <b style="color:var(--down2)">falling
+  red</b>. Same trades every time; only the costs you admit to change.</p>
+  <div class="wkrow">
+    <canvas id="chart" width="900" height="260"></canvas>
+    <div class="ctrls">
+      <div class="sld">
+        <label><span>spread (per round trip)</span><span class="v" id="v-spread">$0.04</span></label>
+        <input type="range" id="s-spread" min="0" max="0.40" step="0.01" value="0.04">
+      </div>
+      <div class="sld">
+        <label><span>overnight swap (per day held)</span><span class="v" id="v-swap">$0.010</span></label>
+        <input type="range" id="s-swap" min="0" max="0.10" step="0.005" value="0.01">
+      </div>
+      <div class="sld">
+        <label><span>slippage (per fill)</span><span class="v" id="v-slip">$0.010</span></label>
+        <input type="range" id="s-slip" min="0" max="0.15" step="0.005" value="0.01">
+      </div>
+      <div class="sld">
+        <label><span>trades per month</span><span class="v" id="v-freq">6</span></label>
+        <input type="range" id="s-freq" min="1" max="40" step="1" value="6">
+      </div>
+      <div class="acct">
+        <div class="row"><span>gross profit (no costs)</span><b id="a-gross">$0.00</b></div>
+        <div class="row"><span>total costs paid</span><b id="a-cost">$0.00</b></div>
+        <div class="row"><span>round trips (12 months)</span><b id="a-trips">72</b></div>
+      </div>
+      <div class="netbig" id="a-net">$0.00</div>
+      <div class="verdict flat" id="a-verdict">drag the sliders…</div>
+    </div>
+  </div>
+</div>
+
+<div class="callout warn">
+  <strong>The spread is a per-trade toll.</strong> Push <em>trades per month</em> up and the curve buckles
+  even with a thin spread — because you pay it on <em>every</em> round trip. Overtrading is the most common
+  way a real edge bleeds out: you pay the toll twenty times to earn it once.
+</div>
+
+<div class="callout info">
+  💡 In <code>market.py</code> this is the line <code>cash -= half_spread * abs(position)</code> on every
+  fill, plus <code>cash -= OVERNIGHT_SWAP * abs(position)</code> on every held day, with slippage folded into
+  the fill price. That's why the backtest there reports equity <em>net of costs</em> — the only honest score.
+</div>
+
+<div class="recap">
+  <div class="r-title">✅ You can now say…</div>
+  <ul>
+    <li><strong>Spread</strong> is paid in full per round trip (half on open, half on close); <strong>frequency multiplies it</strong>.</li>
+    <li><strong>Overnight swap</strong> is a small daily charge for holding a leveraged position past the cutoff.</li>
+    <li><strong>Slippage</strong> makes market orders fill a touch worse than quoted — on every fill.</li>
+    <li>Stacked, these turn many <em>gross-winning</em> strategies into <em>net losers</em> — why most retail CFD accounts lose.</li>
+    <li>An honest backtest scores equity <strong>after</strong> costs, never before.</li>
+  </ul>
+</div>
+
+<p style="margin-top:24px">
+  <a href="lesson_08.html">← L8: A signal</a> &nbsp;·&nbsp;
+  <a href="lesson_10.html"><strong>L10: Backtesting honestly →</strong></a>
+</p>
+
+</div>
+
+<footer class="site">
+  Built by <a href="https://github.com/fernfant">@fernfant</a> ·
+  <a href="https://github.com/fernfant/learn-trading">source on GitHub</a> · MIT licensed
+</footer>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+
+  const START = 2000, QTY = 100, EDGE = 0.18, WOBBLE = 0.6, HOLD = 3, MONTHS = 12;
+
+  // Fixed gross edge: one frozen list of per-trip results, generated once so the
+  // curve is stable as the user drags. A SEEDED rng (not Math.random) keeps the
+  // same trades on every reload. gauss() is Box-Muller over that seeded stream.
+  let RNG = 1337;
+  function rand(){ RNG = (RNG*1103515245 + 12345) & 0x7fffffff; return RNG/0x7fffffff; }
+  function gauss(){ let u=0,v=0; while(!u)u=rand(); while(!v)v=rand();
+    return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+  const MAXTRIPS = 40*MONTHS;   // per-trip gross ~ gauss(EDGE,WOBBLE), scaled by size
+  const GROSS = Array.from({length:MAXTRIPS}, () => (EDGE + gauss()*WOBBLE) * QTY);
+
+  const cv = $('chart'), ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height, PAD = 36;
+
+  function read(){
+    return {
+      spread:+$('s-spread').value,
+      swap:+$('s-swap').value,
+      slip:+$('s-slip').value,
+      freq:+$('s-freq').value,
+    };
+  }
+
+  function compute(p){
+    const trips = p.freq * MONTHS;
+    const perTrip = (p.spread*QTY) + (2*p.slip*QTY) + (p.swap*QTY*HOLD);
+    let eq = START, grossEq = START;
+    const curve = [START];
+    for(let i=0;i<trips;i++){
+      const gr = GROSS[i];
+      grossEq += gr;
+      eq += gr - perTrip;
+      curve.push(eq);
+    }
+    return { curve, trips, perTrip,
+      gross: grossEq - START, cost: perTrip*trips, net: eq - START, end: eq };
+  }
+
+  function draw(r){
+    ctx.clearRect(0,0,W,H);
+    const all = r.curve.concat([START]);
+    let lo=Math.min(...all), hi=Math.max(...all);
+    if(hi-lo < 40){ const c=(hi+lo)/2; lo=c-20; hi=c+20; }
+    const pad=(hi-lo)*0.12; lo-=pad; hi+=pad;
+    const n = r.curve.length-1 || 1;
+    const x = i => PAD + i*(W-2*PAD)/n;
+    const y = v => PAD + (1-(v-lo)/(hi-lo))*(H-2*PAD);
+    // start reference
+    ctx.strokeStyle='#5a636e'; ctx.setLineDash([4,4]); ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(PAD,y(START)); ctx.lineTo(W-PAD,y(START)); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle='#7d8895'; ctx.font='11px ui-monospace,monospace'; ctx.textAlign='left';
+    ctx.fillText('start $'+START, PAD+2, y(START)-4);
+    // net equity curve, colored by final result
+    const up = r.end >= START;
+    ctx.strokeStyle = up ? '#34d399' : '#f87171'; ctx.lineWidth=2;
+    ctx.beginPath();
+    r.curve.forEach((v,i)=>{ i?ctx.lineTo(x(i),y(v)):ctx.moveTo(x(i),y(v)); });
+    ctx.stroke();
+    const ei = r.curve.length-1;
+    ctx.fillStyle = ctx.strokeStyle;
+    ctx.beginPath(); ctx.arc(x(ei),y(r.end),4,0,7); ctx.fill();
+    ctx.fillText('equity', x(ei)-46, y(r.end)-8);
+    ctx.textAlign='right';
+    ctx.fillText('12 months →', W-PAD-2, H-PAD+18);
+  }
+
+  function paint(){
+    const p = read();
+    $('v-spread').textContent = '$'+p.spread.toFixed(2);
+    $('v-swap').textContent = '$'+p.swap.toFixed(3);
+    $('v-slip').textContent = '$'+p.slip.toFixed(3);
+    $('v-freq').textContent = p.freq;
+    const r = compute(p);
+    $('a-gross').textContent = '+$'+r.gross.toFixed(2);
+    $('a-cost').textContent = '-$'+r.cost.toFixed(2);
+    $('a-trips').textContent = r.trips;
+    const ret = r.net / START * 100;
+    $('a-net').textContent = (r.net>=0?'+':'-')+'$'+Math.abs(r.net).toFixed(2)
+      + '  ('+(ret>=0?'+':'')+ret.toFixed(1)+'%)';
+    $('a-net').className = 'netbig ' + (r.net>0?'up3':r.net<0?'down3':'');
+    const vd = $('a-verdict');
+    if(r.net > 40){ vd.className='verdict win'; vd.textContent='✅ profitable — the edge survives these costs'; }
+    else if(r.net < -40){ vd.className='verdict lose'; vd.textContent='💀 blown up — costs ate the whole edge, net loss'; }
+    else { vd.className='verdict flat'; vd.textContent='⚖️ breakeven — costs cancel the edge'; }
+    draw(r);
+  }
+
+  ['s-spread','s-swap','s-slip','s-freq'].forEach(id => $(id).addEventListener('input', paint));
+  paint();
+})();
+</script>
+
+</body>
+</html>

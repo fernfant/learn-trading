@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>L11 · Capstone — Learn to Trade</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .wkrow{display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap}
+  .wkrow canvas{flex:1.5;min-width:340px}
+  .ctrls{flex:1;min-width:270px}
+  .legend{display:flex;gap:16px;font-family:ui-monospace,monospace;font-size:13px;margin:2px 0 10px}
+  .legend span{display:flex;align-items:center;gap:6px;color:var(--dim)}
+  .swatch{width:14px;height:3px;border-radius:2px;display:inline-block}
+  table.metrics{width:100%;border-collapse:collapse;font-family:ui-monospace,monospace;font-size:13px;margin:4px 0}
+  table.metrics th,table.metrics td{padding:6px 8px;text-align:right;border-bottom:1px solid var(--line)}
+  table.metrics th:first-child,table.metrics td:first-child{text-align:left;color:var(--dim)}
+  table.metrics thead th{color:var(--dim);font-weight:700}
+  table.metrics .strat{color:var(--accent)}
+  .up3{color:var(--up2);font-weight:700} .down3{color:var(--down2);font-weight:700}
+  .verdict{font-family:ui-monospace,monospace;font-weight:800;font-size:18px;margin:10px 0 2px}
+  .vsub{font-family:ui-monospace,monospace;font-size:13px;color:var(--dim);min-height:34px;margin-top:2px}
+  .tally{font-family:ui-monospace,monospace;font-size:13px;color:var(--dim);margin:8px 0 2px;min-height:20px}
+  .tally b{color:var(--ink)}
+  .toggle{display:flex;align-items:center;gap:10px;margin:12px 0 6px;font-family:ui-monospace,monospace;font-size:14px}
+  .toggle .sw{width:46px;height:24px;border-radius:999px;background:var(--up);border:1px solid var(--line);
+    position:relative;cursor:pointer;transition:background .15s}
+  .toggle .sw::after{content:"";position:absolute;top:2px;left:24px;width:18px;height:18px;border-radius:50%;
+    background:#03130d;transition:left .15s,background .15s}
+  .toggle.off .sw{background:var(--panel2)} .toggle.off .sw::after{left:2px;background:var(--dim)}
+  .splitlbl{display:flex;justify-content:space-between;font-family:ui-monospace,monospace;font-size:12px;
+    color:#5a636e;margin-top:4px}
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <a href="index.html" class="brand">📈 Learn to Trade</a>
+  <div class="lesson-pills">
+    <a href="index.html">Index</a>
+    <a class="t1" href="lesson_00.html">L0</a>
+    <a class="t1" href="lesson_01.html">L1</a>
+    <a class="t1" href="lesson_02.html">L2</a>
+    <a class="t1" href="lesson_03.html">L3</a>
+    <a class="t1" href="lesson_04.html">L4</a>
+    <a class="t1" href="lesson_05.html">L5</a>
+    <a class="t1" href="lesson_06.html">L6</a>
+    <a class="t1" href="lesson_07.html">L7</a>
+    <a class="t1" href="lesson_08.html">L8</a>
+    <a class="t1" href="lesson_09.html">L9</a>
+    <a class="t1" href="lesson_10.html">L10</a>
+    <a class="t1 current" href="lesson_11.html">L11🏆</a>
+    <a class="t2" href="index.html#track2">T2</a>
+  </div>
+</nav>
+
+<div class="wrap">
+
+<h1>Lesson 11 · 🏆 Capstone — beat buy-and-hold, after costs</h1>
+<p class="subtitle">The boss fight. Everything from Track 1 in one honest backtest: a
+random-walk price, an MA-crossover signal, risk-sized positions, stops, leverage — versus simply
+<strong>buying and holding</strong>. The catch: it must win <em>after</em> the spread, overnight
+funding and slippage, and it's judged on <strong>out-of-sample</strong> data it never tuned on.
+The honest truth? On a near-random market, after costs, that's <em>rare</em>.</p>
+
+<div class="demo">
+  <h3>📊 The capstone dashboard</h3>
+  <p class="subtitle" style="margin:4px 0 12px">One market, split in two: the
+  <b style="color:var(--accent)">strategy</b> tunes on the left half (in-sample) and is judged on the
+  right half (out-of-sample). Hit <b>New market</b> to reseed and watch the verdict flip from market to
+  market — that coin-flippiness <em>is</em> the lesson. Toggle <b>costs</b> off to see how much of the
+  result was just the spread + swap.</p>
+  <div class="wkrow">
+    <canvas id="chart" width="900" height="260"></canvas>
+    <div class="ctrls">
+      <div class="legend">
+        <span><i class="swatch" style="background:var(--accent)"></i> strategy</span>
+        <span><i class="swatch" style="background:var(--link)"></i> buy &amp; hold</span>
+        <span><i class="swatch" style="background:#5a636e"></i> IS / OOS split</span>
+      </div>
+      <table class="metrics">
+        <thead><tr><th>out-of-sample</th><th class="strat">strategy</th><th>buy &amp; hold</th></tr></thead>
+        <tbody>
+          <tr><td>total return</td><td id="m-sr"></td><td id="m-br"></td></tr>
+          <tr><td>Sharpe (ann.)</td><td id="m-ss"></td><td id="m-bs"></td></tr>
+          <tr><td>max drawdown</td><td id="m-sd"></td><td id="m-bd"></td></tr>
+          <tr><td>round-trips</td><td id="m-st"></td><td>1</td></tr>
+        </tbody>
+      </table>
+      <div class="verdict" id="verdict"></div>
+      <div class="vsub" id="vsub"></div>
+      <div class="toggle" id="cost-toggle"><div class="sw"></div><span id="cost-label">costs: ON (spread + swap + slippage)</span></div>
+      <div class="btnrow">
+        <button class="up" id="reseed">🎲 New market</button>
+        <button id="sweep">⚖ Test 20 markets</button>
+      </div>
+      <div class="tally" id="tally"></div>
+    </div>
+  </div>
+  <div class="splitlbl"><span>◀ in-sample (tune here)</span><span>out-of-sample (judged here) ▶</span></div>
+</div>
+
+<div class="callout warn">
+  <strong>Why the verdict keeps flipping.</strong> The market is a random walk. On any single split the
+  strategy might win or lose — often it "wins" only by sitting <em>flat</em> through a drop while
+  buy-and-hold bleeds. That's risk avoidance, not prediction. Hit <b>Test 20 markets</b>: a real edge
+  beats B&amp;H across <em>most</em> of them. This one rarely does — that's the honest result, not a bug.
+</div>
+
+<div class="callout info">
+  💡 <strong>Toggle costs off and watch the gap shrink.</strong> Much of what separates the strategy from
+  buy-and-hold is simply the spread it pays on every crossing plus the swap on every held day. Certain
+  costs eating an uncertain edge is precisely what <em>"most retail CFD accounts lose money"</em> means.
+</div>
+
+<div class="recap">
+  <div class="r-title">🏆 You finished Track 1 — you can now say…</div>
+  <ul>
+    <li>An <strong>honest backtest</strong> is net of all costs, split into in-sample (tune) and out-of-sample (judge), with <strong>no peeking</strong>.</li>
+    <li>The number that counts is the <strong>out-of-sample</strong> one — the in-sample result always flatters you because the knobs were fit to it.</li>
+    <li>Robustness across many markets &gt; one lucky split. A coin-flip win rate means <strong>no edge</strong>.</li>
+    <li>On a near-random walk, after spread + swap + slippage, durably beating <strong>buy-and-hold</strong> is genuinely rare — the whole theme of Track 1.</li>
+    <li>You built a real backtester one line per lesson: price → spread → long/short → equity → leverage → orders → sizing → signal → costs → metrics → capstone.</li>
+  </ul>
+</div>
+
+<div class="callout info">
+  🔁 <strong>Across the hinge into Track 2.</strong> All of Track 1 you <em>paid</em> the spread and watched it
+  eat your edge. Now flip seats: in Track 2 you build the <strong>order book</strong> and the
+  <strong>market maker</strong> that <em>quotes</em> both prices and <strong>earns</strong> that same spread —
+  the role capital.com played for you. The spread that was your cost becomes your revenue. 🏆 → 📕
+</div>
+
+<p style="margin-top:24px">
+  <a href="lesson_10.html">← L10: Backtesting honestly</a> &nbsp;·&nbsp;
+  <a href="lesson_12.html"><strong>Cross into Track 2 → L12: taker → maker 📕</strong></a>
+</p>
+
+</div>
+
+<footer class="site">
+  Built by <a href="https://github.com/fernfant">@fernfant</a> ·
+  <a href="https://github.com/fernfant/learn-trading">source on GitHub</a> · MIT licensed
+</footer>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  function gauss(){ let u=0,v=0; while(!u)u=Math.random(); while(!v)v=Math.random();
+    return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+
+  // ---- params (mirror 11_capstone.py) ----
+  const DAYS=500, SPLIT=250, SPREAD=0.10, SLIP=0.02, LEV=5, RF=0.02,
+        SF=0.04, TF=0.08, FAST=10, SLOW=40, SWAP=0.02, START=2000, DRIFT=0.02;
+  let costs=true, seedState=0;
+
+  // a tiny seeded PRNG so "New market" is reproducible per click
+  function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0;
+    let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t;
+    return ((t^t>>>14)>>>0)/4294967296; }; }
+  let rnd=Math.random;
+  function ng(){ let u=0,v=0; while(!u)u=rnd(); while(!v)v=rnd();
+    return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+
+  function makePrices(){ let mid=100, p=[mid];
+    for(let i=0;i<DAYS;i++){ mid+=ng()+DRIFT; p.push(mid); } return p; }   // gauss(DRIFT,1)
+  const avg = a => a.reduce((s,x)=>s+x,0)/a.length;
+
+  function runStrategy(prices){
+    const hs = costs ? SPREAD/2 : 0, sl = costs ? SLIP : 0, sw = costs ? SWAP : 0;
+    let cash=START, eq=cash, pos=0, entry=0, stop=0, take=0, trades=0;
+    const hist=[prices[0]], curve=[cash];
+    for(let i=1;i<prices.length;i++){
+      const mid=prices[i]; hist.push(mid);
+      const buy=mid+SPREAD/2, sell=mid-SPREAD/2;
+      let mark = pos>0?sell:pos<0?buy:mid;
+      let sig=false;
+      if(hist.length>SLOW) sig = avg(hist.slice(-FAST)) > avg(hist.slice(-SLOW));
+      const hitStop = pos>0 && mark<=stop, hitTake = pos>0 && mark>=take;
+      const um=Math.abs(pos)*mark/LEV, so = pos!==0 && eq<0.5*um;
+      if(pos!==0 && (hitStop||hitTake||so||!sig)){
+        cash += pos*mark - (hs+sl)*Math.abs(pos); pos=0; entry=stop=take=0; trades++;
+      } else if(pos===0 && sig){
+        entry=buy; stop=entry*(1-SF); take=entry*(1+TF);
+        const sd=entry-stop; let qty=Math.floor(RF*eq/sd);
+        const mq=Math.floor(eq*LEV/entry); qty=Math.max(1,Math.min(qty,mq));
+        pos+=qty; cash -= pos*entry + (hs+sl)*pos;
+      }
+      if(pos!==0) cash -= sw*Math.abs(pos);
+      mark = pos>0?sell:pos<0?buy:mid; eq=cash+pos*mark; curve.push(eq);
+    }
+    return {curve, trades};
+  }
+  function buyHold(prices){
+    const hs = costs ? SPREAD/2 : 0;
+    const entry=prices[0]+hs, units=START/entry;
+    return prices.map(p=>units*(p-hs));
+  }
+  const totRet = c => c[c.length-1]/c[0]-1;
+  function sharpe(c){ const r=[]; for(let i=1;i<c.length;i++) if(c[i-1]) r.push(c[i]/c[i-1]-1);
+    if(r.length<2) return 0; const m=avg(r);
+    const v=r.reduce((s,x)=>s+(x-m)*(x-m),0)/(r.length-1), sd=Math.sqrt(v);
+    return sd? (m/sd)*Math.sqrt(252):0; }
+  function maxDD(c){ let pk=c[0], w=0; for(const v of c){ pk=Math.max(pk,v); w=Math.min(w,v/pk-1);} return w; }
+
+  // ---- chart ----
+  const cv=$('chart'), ctx=cv.getContext('2d'); const W=cv.width, H=cv.height, PAD=34;
+  function drawChart(sFull,bFull,prices){
+    ctx.clearRect(0,0,W,H);
+    const all=sFull.concat(bFull);
+    let lo=Math.min(...all), hi=Math.max(...all);
+    const pad=(hi-lo)*0.12||1; lo-=pad; hi+=pad;
+    const n=sFull.length-1;
+    const x=i=>PAD+i*(W-2*PAD)/n, y=v=>PAD+(1-(v-lo)/(hi-lo))*(H-2*PAD);
+    // split line
+    const sx=x(SPLIT);
+    ctx.strokeStyle='#5a636e'; ctx.setLineDash([4,4]); ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(sx,PAD); ctx.lineTo(sx,H-PAD); ctx.stroke(); ctx.setLineDash([]);
+    // start reference
+    ctx.strokeStyle='#33404d'; ctx.setLineDash([2,4]);
+    ctx.beginPath(); ctx.moveTo(PAD,y(START)); ctx.lineTo(W-PAD,y(START)); ctx.stroke(); ctx.setLineDash([]);
+    const line=(c,col)=>{ ctx.strokeStyle=col; ctx.lineWidth=2; ctx.beginPath();
+      c.forEach((v,i)=>{ i?ctx.lineTo(x(i),y(v)):ctx.moveTo(x(i),y(v)); }); ctx.stroke(); };
+    line(bFull,'#58a6ff'); line(sFull,'#f0b429');
+    ctx.font='11px ui-monospace,monospace'; ctx.textAlign='left'; ctx.fillStyle='#7d8895';
+    ctx.fillText('start $'+START, PAD+2, y(START)-4);
+  }
+
+  function fmtPct(x){ return (x>=0?'+':'')+(x*100).toFixed(1)+'%'; }
+  function cls(better){ return better?'up3':'down3'; }
+
+  function render(){
+    rnd = mulberry32(seedState);
+    const prices=makePrices();
+    const sFull=runStrategy(prices), bFull=buyHold(prices);
+    // OOS slice
+    const oosP=prices.slice(SPLIT);
+    const oosS=runStrategy(oosP), oosB=buyHold(oosP);
+    drawChart(sFull.curve, bFull, prices);
+    const sr=totRet(oosS.curve), br=totRet(oosB);
+    $('m-sr').innerHTML=`<span class="${cls(sr>=br)}">${fmtPct(sr)}</span>`;
+    $('m-br').innerHTML=fmtPct(br);
+    $('m-ss').textContent=sharpe(oosS.curve).toFixed(2);
+    $('m-bs').textContent=sharpe(oosB).toFixed(2);
+    $('m-sd').innerHTML=`<span class="${cls(maxDD(oosS.curve)>=maxDD(oosB))}">${(maxDD(oosS.curve)*100).toFixed(1)}%</span>`;
+    $('m-bd').textContent=(maxDD(oosB)*100).toFixed(1)+'%';
+    $('m-st').textContent=oosS.trades;
+    const won=sr>br;
+    $('verdict').innerHTML = won
+      ? '🏆 strategy <span class="up3">BEAT</span> buy &amp; hold'
+      : 'strategy <span class="down3">LOST to</span> buy &amp; hold';
+    if(won && maxDD(oosB)<maxDD(oosS.curve)-0.005 && br<sr){
+      $('vsub').innerHTML = 'mostly by sitting <b>flat</b> through a drop — risk avoidance, not a predictive edge.';
+    } else if(won){
+      $('vsub').innerHTML = 'a narrow win on this market. Reseed a few times — does it hold?';
+    } else {
+      $('vsub').innerHTML = 'the spread on every fill + the swap on every held day ate the thin signal.';
+    }
+  }
+
+  function sweep(){
+    let wins=0; const N=20;
+    for(let s=0;s<N;s++){ rnd=mulberry32(1000+s); const p=makePrices();
+      const oP=p.slice(SPLIT); const sr=totRet(runStrategy(oP).curve), br=totRet(buyHold(oP));
+      if(sr>br) wins++; }
+    $('tally').innerHTML = `Across <b>${N}</b> fresh markets, the strategy beat buy &amp; hold `
+      + `<b>${wins}</b> times (${Math.round(wins/N*100)}%). `
+      + (wins<=N*0.6 ? 'A coin-flip — <b>no real edge</b>.' : 'A genuine edge would look like this.');
+  }
+
+  $('reseed').onclick=()=>{ seedState=(Math.random()*1e9)|0; render(); $('tally').textContent=''; };
+  $('sweep').onclick=sweep;
+  $('cost-toggle').onclick=()=>{ costs=!costs;
+    $('cost-toggle').classList.toggle('off',!costs);
+    $('cost-label').textContent='costs: '+(costs?'ON (spread + swap + slippage)':'OFF (frictionless fantasy)');
+    render(); };
+  render();
+})();
+</script>
+
+</body>
+</html>

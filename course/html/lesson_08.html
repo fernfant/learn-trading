@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>L8 · A signal: moving-average crossover — Learn to Trade</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .wkrow{display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap}
+  .wkrow canvas{flex:1.5;min-width:340px;height:260px}
+  .ctrls{flex:1;min-width:260px}
+  .slider{margin:10px 0}
+  .slider label{display:flex;justify-content:space-between;font-family:ui-monospace,monospace;
+    font-size:13px;color:var(--dim);margin-bottom:4px}
+  .slider label b{color:var(--ink)}
+  .slider input[type=range]{width:100%}
+  .legend{display:flex;gap:16px;font-family:ui-monospace,monospace;font-size:12px;color:var(--dim);
+    margin:4px 0 10px;flex-wrap:wrap}
+  .legend i{display:inline-block;width:14px;height:3px;border-radius:2px;vertical-align:middle;margin-right:5px}
+  .score{font-family:ui-monospace,monospace;line-height:1.6;margin:8px 0}
+  .score .row{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--line)}
+  .score .row span:first-child{color:var(--dim)}
+  .score .row b{color:var(--ink)}
+  .verdict{font-size:15px;font-weight:800;font-family:ui-monospace,monospace;margin:10px 0 2px}
+  .up3{color:var(--up2);font-weight:700} .down3{color:var(--down2);font-weight:700}
+  .toggle{display:flex;align-items:center;gap:10px;margin:12px 0 4px;font-family:ui-monospace,monospace;font-size:14px}
+  .toggle .sw{width:46px;height:24px;border-radius:999px;background:var(--panel2);border:1px solid var(--line);
+    position:relative;cursor:pointer;transition:background .15s}
+  .toggle .sw::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;
+    background:var(--dim);transition:left .15s,background .15s}
+  .toggle.on .sw{background:var(--down)} .toggle.on .sw::after{left:24px;background:#1b0405}
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <a href="index.html" class="brand">📈 Learn to Trade</a>
+  <div class="lesson-pills">
+    <a href="index.html">Index</a>
+    <a class="t1" href="lesson_00.html">L0</a>
+    <a class="t1" href="lesson_01.html">L1</a>
+    <a class="t1" href="lesson_02.html">L2</a>
+    <a class="t1" href="lesson_03.html">L3</a>
+    <a class="t1" href="lesson_04.html">L4</a>
+    <a class="t1" href="lesson_05.html">L5</a>
+    <a class="t1" href="lesson_06.html">L6</a>
+    <a class="t1" href="lesson_07.html">L7</a>
+    <a class="t1 current" href="lesson_08.html">L8</a>
+    <a class="t1" href="lesson_09.html">L9</a>
+    <a class="t1" href="lesson_10.html">L10</a>
+    <a class="t1" href="lesson_11.html">L11🏆</a>
+    <a class="t2" href="index.html#track2">T2</a>
+  </div>
+</nav>
+
+<div class="wrap">
+
+<h1>Lesson 8 · A signal: the moving-average crossover</h1>
+<p class="subtitle">A <strong>moving average</strong> is just the mean of the last few prices — it smooths
+the noise. The famous rule: when the <b style="color:var(--up2)">fast</b> average crosses <em>above</em> the
+<b style="color:var(--accent)">slow</b> one, go long; when it crosses back below, go flat. It looks like wisdom.
+Below you can <em>test</em> it — and watch it flip from hero to zero as you reseed the market.</p>
+
+<div class="demo">
+  <h3>📈 Crossover backtester — does the rule actually beat buy &amp; hold?</h3>
+  <p class="subtitle" style="margin:4px 0 12px">Drag the windows, toggle a per-trade cost, and hit
+  <b>New market</b> over and over. The <b style="color:var(--up2)">▲</b>/<b style="color:var(--down2)">▼</b>
+  mark where the signal flips. Watch the verdict flip-flop — that instability is the whole point.</p>
+  <div class="wkrow">
+    <canvas id="chart" width="900" height="260"></canvas>
+    <div class="ctrls">
+      <div class="legend">
+        <span><i style="background:#58a6ff"></i>price</span>
+        <span><i style="background:#34d399"></i>fast MA</span>
+        <span><i style="background:#f0b429"></i>slow MA</span>
+      </div>
+      <div class="slider">
+        <label>fast window <b id="fast-v">5</b></label>
+        <input type="range" id="fast" min="2" max="30" value="5">
+      </div>
+      <div class="slider">
+        <label>slow window <b id="slow-v">20</b></label>
+        <input type="range" id="slow" min="5" max="80" value="20">
+      </div>
+      <div class="toggle" id="cost-toggle"><div class="sw"></div><span id="cost-label">per-trade cost: OFF</span></div>
+      <div class="score">
+        <div class="row"><span>crossover</span><b id="s-cx">+0.0%</b></div>
+        <div class="row"><span>buy &amp; hold</span><b id="s-bh">+0.0%</b></div>
+        <div class="row"><span>trades (× cost)</span><b id="s-tr">0</b></div>
+      </div>
+      <div class="verdict" id="verdict">—</div>
+      <div class="btnrow">
+        <button class="down" id="reseed">🎲 New market (reseed)</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="callout warn">
+  <strong>Most "signals" are noise.</strong> On a near-random price the crossover trades on wiggles, not
+  insight — sometimes it wins, sometimes it loses, and a tiny per-trade <em>cost</em> drags it below
+  buy &amp; hold (which pays the toll only once). Hit reseed a dozen times: a rule with a real edge would
+  win <em>consistently</em>. This one doesn't.
+</div>
+
+<div class="callout info">
+  💡 <strong>The honest test has two more parts.</strong> An edge must survive <strong>costs</strong>
+  (Lesson 9 — spread, overnight funding, slippage) <em>and</em> <strong>out-of-sample</strong> data you
+  didn't tune on (Lesson 10 — return, Sharpe, drawdown). Beating one cherry-picked chart proves nothing.
+</div>
+
+<div class="recap">
+  <div class="r-title">✅ You can now say…</div>
+  <ul>
+    <li>A <strong>moving average</strong> is the mean of the last N prices; a <strong>fast</strong> one reacts quickly, a <strong>slow</strong> one lags.</li>
+    <li>The crossover rule is one line: <code>signal = fast_ma &gt; slow_ma</code> → long; flip back → flat.</li>
+    <li>On a near-random walk it mostly trades <strong>noise</strong> — it doesn't reliably beat buy &amp; hold or even a coin flip.</li>
+    <li>It crosses the spread on <em>every</em> trade, so a small <strong>cost</strong> can sink it; buy &amp; hold pays once.</li>
+    <li>A claimed edge must survive <strong>costs</strong> and <strong>out-of-sample</strong> data — the teaser for L9 and L10.</li>
+  </ul>
+</div>
+
+<p style="margin-top:24px">
+  <a href="lesson_07.html">← L7: Risk &amp; sizing</a> &nbsp;·&nbsp;
+  <a href="lesson_09.html"><strong>L9: Costs that kill — spread, funding &amp; slippage →</strong></a>
+</p>
+
+</div>
+
+<footer class="site">
+  Built by <a href="https://github.com/fernfant">@fernfant</a> ·
+  <a href="https://github.com/fernfant/learn-trading">source on GitHub</a> · MIT licensed
+</footer>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  function gauss(){ let u=0,v=0; while(!u)u=Math.random(); while(!v)v=Math.random();
+    return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+
+  const cv = $('chart'), ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height, PAD = 30, DAYS = 120, COST = 0.10;
+  let path = [], fast = 5, slow = 20, costOn = false;
+
+  function newMarket(){
+    let p = 100; path = [p];
+    for(let i=0;i<DAYS;i++){ p += gauss(); path.push(p); }
+    recompute();
+  }
+  // SMA of the last n values ending at index i (inclusive); null if too short.
+  function sma(i, n){
+    if(i+1 < n) return null;
+    let s=0; for(let k=i-n+1;k<=i;k++) s+=path[k];
+    return s/n;
+  }
+
+  function backtest(){
+    let pos=0, entry=0, pnl=0, trades=0;
+    const marks=[];
+    let prev=null;
+    for(let i=0;i<path.length;i++){
+      const f=sma(i,fast), s=sma(i,slow);
+      if(f===null||s===null) continue;
+      const sig = f>s;
+      if(prev!==null && sig!==prev) marks.push({i, up:sig});
+      prev=sig;
+      if(sig && pos===0){ pos=1; entry=path[i]; if(costOn)pnl-=COST; trades++; }
+      else if(!sig && pos===1){ pnl+=path[i]-entry; pos=0; if(costOn)pnl-=COST; trades++; }
+    }
+    if(pos===1){ pnl+=path[path.length-1]-entry; if(costOn)pnl-=COST; trades++; }
+    const cx = pnl/path[0]*100;
+    const bh = (path[path.length-1]-path[0])/path[0]*100;
+    return {cx, bh, trades, marks};
+  }
+
+  function fmt(x){ return (x>=0?'+':'')+x.toFixed(1)+'%'; }
+
+  function recompute(){
+    if(fast>=slow){ slow=fast+1; $('slow').value=slow; $('slow-v').textContent=slow; }
+    const r = backtest();
+    draw(r.marks);
+    $('s-cx').textContent = fmt(r.cx);
+    $('s-cx').className = r.cx>=0?'up3':'down3';
+    $('s-bh').textContent = fmt(r.bh);
+    $('s-bh').className = r.bh>=0?'up3':'down3';
+    $('s-tr').textContent = costOn ? r.trades+' × '+COST.toFixed(2) : r.trades;
+    const beat = r.cx > r.bh;
+    $('verdict').innerHTML = beat
+      ? 'crossover <span class="up3">BEAT</span> buy &amp; hold here'
+      : 'crossover <span class="down3">LOST to</span> buy &amp; hold here';
+  }
+
+  function draw(marks){
+    ctx.clearRect(0,0,W,H);
+    // y-range over price (MAs stay within it)
+    let lo=Math.min(...path), hi=Math.max(...path);
+    const pad=(hi-lo)*0.12 || 1; lo-=pad; hi+=pad;
+    const x = i => PAD + i*(W-2*PAD)/(path.length-1);
+    const y = v => PAD + (1-(v-lo)/(hi-lo))*(H-2*PAD);
+    const plot = (valAt, color, wdt) => {
+      ctx.strokeStyle=color; ctx.lineWidth=wdt; ctx.beginPath();
+      let started=false;
+      for(let i=0;i<path.length;i++){
+        const v=valAt(i); if(v===null) continue;
+        if(!started){ ctx.moveTo(x(i),y(v)); started=true; } else ctx.lineTo(x(i),y(v));
+      }
+      ctx.stroke();
+    };
+    plot(i=>path[i], '#58a6ff', 2);          // price
+    plot(i=>sma(i,fast), '#34d399', 1.5);    // fast MA
+    plot(i=>sma(i,slow), '#f0b429', 1.5);    // slow MA
+    // crossover markers, on the price line
+    ctx.font='12px ui-monospace,monospace'; ctx.textAlign='center';
+    marks.forEach(m=>{
+      const px=x(m.i), py=y(path[m.i]);
+      ctx.fillStyle = m.up ? '#34d399' : '#f87171';
+      ctx.fillText(m.up?'▲':'▼', px, m.up?py+16:py-8);
+    });
+  }
+
+  $('fast').oninput = e => { fast=+e.target.value; $('fast-v').textContent=fast; recompute(); };
+  $('slow').oninput = e => { slow=+e.target.value; $('slow-v').textContent=slow; recompute(); };
+  $('cost-toggle').onclick = () => {
+    costOn=!costOn;
+    $('cost-toggle').classList.toggle('on',costOn);
+    $('cost-label').textContent='per-trade cost: '+(costOn?'ON':'OFF');
+    recompute();
+  };
+  $('reseed').onclick = newMarket;
+  newMarket();
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>L7 · Risk &amp; position sizing — Learn to Trade</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .wkrow{display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap}
+  .wkrow canvas{flex:1.6;min-width:340px}
+  .ctrls{flex:1;min-width:260px}
+  .slider{margin:14px 0}
+  .slider label{display:flex;justify-content:space-between;font-family:ui-monospace,monospace;
+    font-size:13px;color:var(--dim);margin-bottom:6px}
+  .slider label b{color:var(--ink);font-size:15px}
+  .slider input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer}
+  .stat{font-family:ui-monospace,monospace;line-height:1.6;margin:6px 0}
+  .stat .row{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--line)}
+  .stat .row span:first-child{color:var(--dim)}
+  .stat .row b{color:var(--ink)}
+  .verdict{font-size:22px;font-weight:800;font-family:ui-monospace,monospace;margin:10px 0 2px;min-height:28px}
+  .up3{color:var(--up2);font-weight:700} .down3{color:var(--down2);font-weight:700}
+  .note{font-family:ui-monospace,monospace;font-size:13px;min-height:20px;margin-top:6px;color:var(--dim)}
+  .recov{width:100%;border-collapse:collapse;font-family:ui-monospace,monospace;font-size:13px;margin-top:6px}
+  .recov td{padding:4px 8px;border-bottom:1px solid var(--line)}
+  .recov td:last-child{text-align:right;color:var(--down2);font-weight:700}
+  .recov td:first-child{color:var(--dim)}
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <a href="index.html" class="brand">📈 Learn to Trade</a>
+  <div class="lesson-pills">
+    <a href="index.html">Index</a>
+    <a class="t1" href="lesson_00.html">L0</a>
+    <a class="t1" href="lesson_01.html">L1</a>
+    <a class="t1" href="lesson_02.html">L2</a>
+    <a class="t1" href="lesson_03.html">L3</a>
+    <a class="t1" href="lesson_04.html">L4</a>
+    <a class="t1" href="lesson_05.html">L5</a>
+    <a class="t1" href="lesson_06.html">L6</a>
+    <a class="t1 current" href="lesson_07.html">L7</a>
+    <a class="t1" href="lesson_08.html">L8</a>
+    <a class="t1" href="lesson_09.html">L9</a>
+    <a class="t1" href="lesson_10.html">L10</a>
+    <a class="t1" href="lesson_11.html">L11🏆</a>
+    <a class="t2" href="index.html#track2">T2</a>
+  </div>
+</nav>
+
+<div class="wrap">
+
+<h1>Lesson 7 · Risk &amp; position sizing — don't blow up</h1>
+<p class="subtitle">Beginners obsess over <em>what</em> to trade. The truth that keeps you alive is
+<strong>how much</strong> you bet. You can have a real winning edge and still go broke by betting too big —
+a normal run of losses wipes you out first. The fix is one line:
+<strong>risk a small fixed fraction of equity per trade</strong>:
+<code>qty = risk_frac × equity / stop_distance</code>.</p>
+
+<div class="demo">
+  <h3>🎲 The risk dial — same edge, your choice of bet size</h3>
+  <p class="subtitle" style="margin:4px 0 12px">Pick an <b style="color:var(--accent)">edge</b> (how often you win)
+  and a <b style="color:var(--accent)">risk per trade</b> (fraction of equity staked). Then run
+  <b>40 traders</b> through 200 trades each — same coin, same edge, only the bet size differs. Watch how many
+  curves crash into the floor.</p>
+  <div class="wkrow">
+    <canvas id="chart" width="900" height="260"></canvas>
+    <div class="ctrls">
+      <div class="slider">
+        <label>risk per trade <b id="v-risk">2.0%</b></label>
+        <input type="range" id="s-risk" min="0.5" max="30" step="0.5" value="2">
+      </div>
+      <div class="slider">
+        <label>edge (win probability) <b id="v-edge">52%</b></label>
+        <input type="range" id="s-edge" min="45" max="60" step="1" value="52">
+      </div>
+      <div class="verdict" id="verdict">—</div>
+      <div class="stat">
+        <div class="row"><span>survived (&gt; 20% of start)</span><b id="s-surv">—</b></div>
+        <div class="row"><span>busted</span><b id="s-bust">—</b></div>
+        <div class="row"><span>median ending equity</span><b id="s-med">—</b></div>
+      </div>
+      <div class="note" id="note">Same edge for every trader. Only the bet size changes the outcome.</div>
+      <div class="btnrow">
+        <button class="up" id="run">⏩ Run 40 traders</button>
+        <button id="reset">↻ Reset</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="callout info">
+  💡 <strong>Size to the stop, not to a hunch.</strong> With $10,000 and a 2% rule you risk $200 a trade.
+  A tight stop $0.50 away lets you hold 400 units; a wide $5.00 stop forces you down to 40 — the dollars at
+  risk stay $200 either way. The stop distance, not your confidence, sets the size:
+  <code>qty = risk_frac × equity / stop_distance</code>.
+</div>
+
+<div class="callout warn">
+  <strong>The drawdown trap.</strong> Losses and gains aren't symmetric — recovering a loss needs a
+  <em>bigger</em> gain than the loss itself (<code>gain = loss / (1 − loss)</code>). Big bets dig deep holes,
+  and deep holes demand heroic climbs:
+  <table class="recov">
+    <tr><td>down 10%</td><td>need +11%</td></tr>
+    <tr><td>down 20%</td><td>need +25%</td></tr>
+    <tr><td>down 50%</td><td>need +100%</td></tr>
+    <tr><td>down 75%</td><td>need +300%</td></tr>
+    <tr><td>down 90%</td><td>need +900%</td></tr>
+  </table>
+  This arithmetic is why <strong>capital preservation is rule #1</strong>.
+</div>
+
+<div class="recap">
+  <div class="r-title">✅ You can now say…</div>
+  <ul>
+    <li><strong>How much</strong> you bet matters more than <em>what</em> you bet — over-betting ruins a winning edge.</li>
+    <li><strong>Fixed-fractional sizing</strong>: risk a small fixed fraction (1–2%) of equity per trade.</li>
+    <li>The line you added to <code>market.py</code>: <code>qty = int(risk_frac * equity / stop_distance)</code>.</li>
+    <li>A wider stop ⇒ smaller size (same dollar risk); bigger equity ⇒ bigger size.</li>
+    <li>Drawdowns aren't symmetric — down 50% needs +100% back. <strong>Risk of ruin</strong> is real math, not a scare story.</li>
+  </ul>
+</div>
+
+<p style="margin-top:24px">
+  <a href="lesson_06.html">← L6: Order types</a> &nbsp;·&nbsp;
+  <a href="lesson_08.html"><strong>L8: A signal — moving-average crossover →</strong></a>
+</p>
+
+</div>
+
+<footer class="site">
+  Built by <a href="https://github.com/fernfant">@fernfant</a> ·
+  <a href="https://github.com/fernfant/learn-trading">source on GitHub</a> · MIT licensed
+</footer>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  function gauss(){ let u=0,v=0; while(!u)u=Math.random(); while(!v)v=Math.random();
+    return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+
+  const cv = $('chart'), ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height, PAD = 36;
+  const N_TRADES = 200, N_TRADERS = 40, RUIN = 0.20;
+  let riskFrac = 0.02, winProb = 0.52, paths = null, raf = null;
+
+  // one trader: bet a fixed fraction of CURRENT equity each trade; ±1x payoff
+  function runPath(){
+    let eq = 1.0; const hist = [eq];
+    for(let i=0;i<N_TRADES;i++){
+      const stake = riskFrac * eq;
+      eq += (Math.random() < winProb ? stake : -stake);
+      if(eq < 0) eq = 0;
+      hist.push(eq);
+    }
+    return hist;
+  }
+
+  function median(arr){
+    const s = arr.slice().sort((a,b)=>a-b), n=s.length;
+    return n%2 ? s[(n-1)/2] : (s[n/2-1]+s[n/2])/2;
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    const x = i => PAD + i*(W-2*PAD)/N_TRADES;
+    // log-ish vertical scale: clamp to [0, 4x], start line at 1
+    const TOP = 4;
+    const y = v => PAD + (1 - Math.min(v,TOP)/TOP)*(H-2*PAD);
+    // ruin floor + start reference
+    ctx.strokeStyle='#5a636e'; ctx.setLineDash([4,4]); ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(PAD,y(1)); ctx.lineTo(W-PAD,y(1)); ctx.stroke();
+    ctx.strokeStyle='#6e2b2e'; ctx.beginPath();
+    ctx.moveTo(PAD,y(RUIN)); ctx.lineTo(W-PAD,y(RUIN)); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.font='11px ui-monospace,monospace'; ctx.textAlign='left';
+    ctx.fillStyle='#7d8895'; ctx.fillText('start ×1', PAD+2, y(1)-4);
+    ctx.fillStyle='#f87171'; ctx.fillText('ruin (20%)', PAD+2, y(RUIN)-4);
+    if(!paths) return;
+    paths.forEach(h=>{
+      const end = h[h.length-1];
+      ctx.strokeStyle = end>RUIN ? 'rgba(52,211,153,.55)' : 'rgba(248,113,113,.6)';
+      ctx.lineWidth = 1.3; ctx.beginPath();
+      h.forEach((v,i)=>{ i?ctx.lineTo(x(i),y(v)):ctx.moveTo(x(i),y(v)); });
+      ctx.stroke();
+    });
+  }
+
+  function run(){
+    if(raf){ cancelAnimationFrame(raf); raf=null; }
+    paths = Array.from({length:N_TRADERS}, runPath);
+    const ends = paths.map(h=>h[h.length-1]);
+    const survived = ends.filter(e=>e>RUIN).length;
+    const busted = N_TRADERS - survived;
+    const med = median(ends);
+    $('s-surv').textContent = survived + ' / ' + N_TRADERS;
+    $('s-bust').textContent = busted + ' / ' + N_TRADERS;
+    $('s-med').textContent = med.toFixed(2) + '×';
+    const rate = survived / N_TRADERS;
+    if(rate >= 0.9){
+      $('verdict').innerHTML = '<span class="up3">you survive ✓</span>';
+      $('note').textContent = 'Small bets compound through the bad runs. This is the boring way that works.';
+    } else if(rate >= 0.5){
+      $('verdict').innerHTML = '<span class="down3">danger zone</span>';
+      $('note').textContent = 'Betting this big, a losing streak takes out a big chunk of traders — same edge.';
+    } else {
+      $('verdict').innerHTML = '<span class="down3">most blow up 💥</span>';
+      $('note').textContent = 'Identical winning edge — bet size alone ruined the majority. That is risk of ruin.';
+    }
+    // animate paths drawing in
+    let frame = 0;
+    const STEPS = 24;
+    const full = paths;
+    const animate = () => {
+      frame++;
+      const cut = Math.round(N_TRADES * frame/STEPS);
+      paths = full.map(h=>h.slice(0, cut+1));
+      draw();
+      if(frame < STEPS) raf = requestAnimationFrame(animate);
+      else { paths = full; draw(); raf = null; }
+    };
+    animate();
+  }
+
+  function reset(){
+    if(raf){ cancelAnimationFrame(raf); raf=null; }
+    paths = null; draw();
+    $('verdict').textContent = '—';
+    $('s-surv').textContent = $('s-bust').textContent = $('s-med').textContent = '—';
+    $('note').textContent = 'Same edge for every trader. Only the bet size changes the outcome.';
+  }
+
+  $('s-risk').oninput = e => {
+    riskFrac = parseFloat(e.target.value)/100;
+    $('v-risk').textContent = parseFloat(e.target.value).toFixed(1)+'%';
+  };
+  $('s-edge').oninput = e => {
+    winProb = parseFloat(e.target.value)/100;
+    $('v-edge').textContent = e.target.value+'%';
+  };
+  $('run').onclick = run;
+  $('reset').onclick = reset;
+  reset();
+})();
+</script>
+
+</body>
+</html>

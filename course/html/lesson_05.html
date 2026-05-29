@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>L5 · Leverage &amp; margin — Learn to Trade</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .wkrow{display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap}
+  .wkrow canvas{flex:1.4;min-width:320px}
+  .ctrls{flex:1;min-width:280px}
+  .levrow{font-family:ui-monospace,monospace;font-size:14px;margin:4px 0 10px}
+  .levrow input[type=range]{width:100%;accent-color:var(--accent);margin-top:6px}
+  .levrow .levbig{font-size:26px;font-weight:800;color:var(--accent)}
+  .acct{font-family:ui-monospace,monospace;line-height:1.6;margin:10px 0 2px}
+  .acct .row{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--line)}
+  .acct .row span:first-child{color:var(--dim)}
+  .acct .row b{color:var(--ink)}
+  .up3{color:var(--up2);font-weight:700} .down3{color:var(--down2);font-weight:700}
+  /* the margin meter */
+  .meterwrap{margin:14px 0 4px}
+  .meterlabel{display:flex;justify-content:space-between;font-family:ui-monospace,monospace;
+    font-size:13px;color:var(--dim);margin-bottom:5px}
+  .meterlabel b{font-size:18px}
+  .meter{position:relative;height:30px;border-radius:8px;background:var(--code-bg);
+    border:1px solid var(--line);overflow:hidden}
+  .meter .fill{position:absolute;left:0;top:0;bottom:0;width:100%;
+    background:var(--up);transition:width .12s linear,background .12s linear}
+  /* the 50% stop-out line sits at the meter's midpoint */
+  .meter .stopline{position:absolute;top:-3px;bottom:-3px;left:50%;width:2px;
+    background:var(--accent);z-index:2}
+  .meter .stoptag{position:absolute;top:50%;left:50%;transform:translate(6px,-50%);
+    font-family:ui-monospace,monospace;font-size:10px;color:var(--accent);z-index:3;font-weight:700}
+  .banner{display:none;border-radius:10px;padding:12px 16px;margin:12px 0 0;font-weight:700;
+    font-family:ui-monospace,monospace;font-size:14px;border:1px solid var(--down);
+    background:#23151622;color:var(--down2)}
+  .banner.show{display:block}
+  .note{font-family:ui-monospace,monospace;font-size:13px;min-height:20px;margin-top:8px;color:var(--dim)}
+  button:disabled{opacity:.4;cursor:not-allowed;filter:none}
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <a href="index.html" class="brand">📈 Learn to Trade</a>
+  <div class="lesson-pills">
+    <a href="index.html">Index</a>
+    <a class="t1" href="lesson_00.html">L0</a>
+    <a class="t1" href="lesson_01.html">L1</a>
+    <a class="t1" href="lesson_02.html">L2</a>
+    <a class="t1" href="lesson_03.html">L3</a>
+    <a class="t1" href="lesson_04.html">L4</a>
+    <a class="t1 current" href="lesson_05.html">L5</a>
+    <a class="t1" href="lesson_06.html">L6</a>
+    <a class="t1" href="lesson_07.html">L7</a>
+    <a class="t1" href="lesson_08.html">L8</a>
+    <a class="t1" href="lesson_09.html">L9</a>
+    <a class="t1" href="lesson_10.html">L10</a>
+    <a class="t1" href="lesson_11.html">L11🏆</a>
+    <a class="t2" href="index.html#track2">T2</a>
+  </div>
+</nav>
+
+<div class="wrap">
+
+<h1>Lesson 5 · Leverage &amp; margin — the double-edged sword</h1>
+<p class="subtitle">Leverage lets you control a big <strong>notional</strong> position with a small
+<strong>margin</strong> deposit: <code>margin = notional / leverage</code>. The broker fronts the rest.
+That multiplies your gains <em>and</em> your losses against your own cash. capital.com watches your
+<strong>margin level</strong> (<code>equity / used margin</code>) and <strong>force-closes</strong> you at
+50% — the stop-out. Crank the slider up and feel how a tiny move blows the account.</p>
+
+<div class="demo">
+  <h3>⚡ Open a leveraged trade and watch the margin meter</h3>
+  <p class="subtitle" style="margin:4px 0 12px">You have <b>$1,000</b>. Pick a leverage, go
+  <b style="color:var(--up2)">long</b> or <b style="color:var(--down2)">short</b>, then step the market.
+  The <b style="color:var(--accent)">MARGIN METER</b> shows your margin level; it drains toward the gold
+  50% line as equity falls. Hit it and capital.com <b>force-closes</b> you.</p>
+  <div class="wkrow">
+    <canvas id="chart" width="900" height="240"></canvas>
+    <div class="ctrls">
+      <div class="levrow">
+        leverage: <span class="levbig" id="lev-val">10x</span>
+        <input type="range" id="lev" min="1" max="30" step="1" value="10">
+      </div>
+      <div class="dirpick" style="display:flex;gap:10px;margin-bottom:6px">
+        <button class="up" id="go-long" style="flex:1">▲ Long</button>
+        <button class="down" id="go-short" style="flex:1">▼ Short</button>
+      </div>
+
+      <div class="meterwrap">
+        <div class="meterlabel"><span>margin level</span><b id="m-pct">—</b></div>
+        <div class="meter">
+          <div class="fill" id="m-fill"></div>
+          <div class="stopline"></div>
+          <div class="stoptag">50% stop-out</div>
+        </div>
+      </div>
+
+      <div class="acct">
+        <div class="row"><span>notional (position size)</span><b id="a-notional">$0.00</b></div>
+        <div class="row"><span>used margin</span><b id="a-margin">$0.00</b></div>
+        <div class="row"><span>equity (net worth)</span><b id="a-equity">$1000.00</b></div>
+      </div>
+      <div class="note" id="a-note">Pick a leverage, then open a trade.</div>
+      <div class="banner" id="banner"></div>
+      <div class="btnrow">
+        <button id="step" disabled>▶ Next day</button>
+        <button id="run" disabled>⏩ Run</button>
+        <button id="close" disabled>✗ Close</button>
+        <button id="reset">↻ New account</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="callout info">
+  💡 <strong>Same bet, louder.</strong> The dollar move on your position is identical at every
+  leverage — leverage only shrinks the <em>margin</em> you put up. So a fixed loss eats a bigger and
+  bigger <em>fraction</em> of your cash as you crank the slider. At 1x a 2% dip is a scratch; at 20x the
+  same dip erases 40% of your margin.
+</div>
+
+<div class="callout warn">
+  <strong>The stop-out is automatic and merciless.</strong> When margin level hits 50%, capital.com
+  closes your position for you — you don't choose the moment, and the loss is locked in. At high
+  leverage you can be in the warning zone after a single ordinary day. This is the number-one way small
+  accounts blow up. Start on the <strong>1:1 (1X)</strong> demo.
+</div>
+
+<div class="recap">
+  <div class="r-title">✅ You can now say…</div>
+  <ul>
+    <li><strong>Notional</strong> = <code>|position| × price</code>; <strong>margin</strong> = <code>notional / leverage</code> — the cash the broker locks up.</li>
+    <li>Leverage multiplies gains <em>and</em> losses as a <strong>% of your cash</strong>; the dollar move on the position is unchanged.</li>
+    <li><strong>Margin level</strong> = <code>equity / used_margin</code>. capital.com warns at 75% / 100% and <strong>stops you out at 50%</strong>.</li>
+    <li>The line you added to <code>market.py</code>: <code>margin = abs(position)*price/leverage</code>, plus the 50% stop-out check.</li>
+    <li>Higher leverage = a smaller move wipes you. Lower leverage = more room to be wrong.</li>
+  </ul>
+</div>
+
+<p style="margin-top:24px">
+  <a href="lesson_04.html">← L4: P&amp;L &amp; equity</a> &nbsp;·&nbsp;
+  <a href="lesson_06.html"><strong>L6: Order types — make the market wait for you →</strong></a>
+</p>
+
+</div>
+
+<footer class="site">
+  Built by <a href="https://github.com/fernfant">@fernfant</a> ·
+  <a href="https://github.com/fernfant/learn-trading">source on GitHub</a> · MIT licensed
+</footer>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const START = 1000, QTY = 60, SPREAD = 0.10, ENTRY_MID = 100, MAXD = 40, STOPOUT = 50;
+  function gauss(){ let u=0,v=0; while(!u)u=Math.random(); while(!v)v=Math.random();
+    return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+
+  const cv = $('chart'), ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height, PAD = 34;
+  let lev, cash, position, entry, mid, day, hist, closed, stoppedOut, raf=null;
+
+  const markPrice = () => position>0 ? mid-SPREAD/2 : position<0 ? mid+SPREAD/2 : mid;
+  const equityNow = () => cash + position * markPrice();
+  const usedMargin = () => Math.abs(position) * markPrice() / lev;
+  const marginLevel = () => position===0 ? Infinity : equityNow() / usedMargin() * 100;
+
+  function setButtons(){
+    const open = position!==0;
+    $('go-long').disabled = open; $('go-short').disabled = open;
+    $('lev').disabled = open;
+    $('step').disabled = !open; $('run').disabled = !open; $('close').disabled = !open;
+  }
+
+  function reset(){
+    if(raf){cancelAnimationFrame(raf);raf=null;}
+    lev = +$('lev').value;
+    cash=START; position=0; entry=0; mid=ENTRY_MID; day=0; hist=[ENTRY_MID];
+    closed=false; stoppedOut=false;
+    $('banner').className='banner';
+    $('a-note').textContent='Pick a leverage, then open a trade.';
+    setButtons(); draw(); paint();
+  }
+  function open(d){
+    if(position!==0) return;
+    lev = +$('lev').value;
+    mid=ENTRY_MID; day=0; hist=[ENTRY_MID]; closed=false; stoppedOut=false;
+    $('banner').className='banner';
+    entry = d>0 ? mid+SPREAD/2 : mid-SPREAD/2;   // cross to the bad side
+    position = d*QTY;
+    cash -= position * entry;                    // full notional debited; equity adds it back
+    $('a-note').textContent = (d>0?'LONG':'SHORT')+' '+QTY+' opened at '+lev+'x. Step the market.';
+    setButtons(); draw(); paint();
+  }
+  function forceClose(){
+    // capital.com closes you at the current price; the realized loss stays in cash
+    cash += position * markPrice();
+    position = 0; entry = 0; stoppedOut = true; closed = true;
+    if(raf){cancelAnimationFrame(raf);raf=null;}
+    $('banner').textContent = '🚨 STOP-OUT — margin level hit 50%. capital.com force-closed you. '
+      + 'Equity left: $' + cash.toFixed(2) + ' of your $1,000.';
+    $('banner').className='banner show';
+    setButtons(); paint();
+  }
+  function step(){
+    if(position===0 || day>=MAXD) return false;
+    mid += gauss(); day++; hist.push(mid);
+    if(marginLevel() <= STOPOUT){ draw(); forceClose(); return false; }
+    draw(); paint(); return true;
+  }
+  function close(){
+    if(position===0) return;
+    if(raf){cancelAnimationFrame(raf);raf=null;}
+    const realized = cash + position*markPrice() - START;
+    cash += position * markPrice();
+    position = 0; entry = 0; closed = true;
+    $('a-note').innerHTML = 'closed → realized <b class="'+(realized>=0?'up3':'down3')+'">'
+      + (realized>=0?'+':'')+realized.toFixed(2)+'</b> into balance';
+    setButtons(); draw(); paint();
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    let lo=Math.min(...hist), hi=Math.max(...hist);
+    if(hi-lo < 4){ const c=(hi+lo)/2; lo=c-2; hi=c+2; }
+    const pad=(hi-lo)*0.15; lo-=pad; hi+=pad;
+    const x = i => PAD + i*(W-2*PAD)/MAXD;
+    const y = v => PAD + (1-(v-lo)/(hi-lo))*(H-2*PAD);
+    // entry reference line
+    if(position!==0 || closed){
+      ctx.strokeStyle='#5a636e'; ctx.setLineDash([4,4]); ctx.lineWidth=1;
+      ctx.beginPath(); ctx.moveTo(PAD,y(ENTRY_MID)); ctx.lineTo(W-PAD,y(ENTRY_MID)); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle='#7d8895'; ctx.font='11px ui-monospace,monospace'; ctx.textAlign='left';
+      ctx.fillText('entry $'+ENTRY_MID, PAD+2, y(ENTRY_MID)-4);
+    }
+    // price line — green if your trade is up, red if down (long vs short aware)
+    const up = position>0 ? mid>=ENTRY_MID : position<0 ? mid<=ENTRY_MID : true;
+    ctx.strokeStyle = position===0 ? '#58a6ff' : (up ? '#34d399' : '#f87171');
+    ctx.lineWidth=2; ctx.beginPath();
+    hist.forEach((v,i)=>{ i?ctx.lineTo(x(i),y(v)):ctx.moveTo(x(i),y(v)); });
+    ctx.stroke();
+    ctx.fillStyle = ctx.strokeStyle;
+    ctx.beginPath(); ctx.arc(x(hist.length-1),y(mid),4,0,7); ctx.fill();
+    ctx.fillStyle='#7d8895'; ctx.fillText('price $'+mid.toFixed(2), x(hist.length-1)-70, y(mid)-8);
+  }
+
+  function paint(){
+    const eq = equityNow();
+    const notional = Math.abs(position) * markPrice();
+    $('a-notional').textContent = '$'+notional.toFixed(2);
+    $('a-margin').textContent = '$'+usedMargin().toFixed(2);
+    $('a-equity').textContent = '$'+eq.toFixed(2);
+    $('a-equity').className = position===0 ? '' : (eq>START?'up3':eq<START?'down3':'');
+    // margin meter: map margin level onto the bar. 100% = full, 50% = the stop line (midpoint).
+    const lvl = marginLevel();
+    if(position===0 && !stoppedOut){
+      $('m-pct').textContent='—'; $('m-pct').className='';
+      $('m-fill').style.width='100%'; $('m-fill').style.background='var(--up)';
+      return;
+    }
+    const shown = stoppedOut ? 50 : lvl;
+    // bar width: full at 200%+, the gold line at 50%, empty at 0%. Linear in level, capped.
+    const pctWidth = Math.max(0, Math.min(100, shown/200*100));
+    $('m-fill').style.width = pctWidth.toFixed(1)+'%';
+    let color = 'var(--up)';                       // healthy green
+    if(shown < 100) color = 'var(--accent)';       // amber: margin-call zone
+    if(shown <= 50) color = 'var(--down)';         // red: stopped out
+    $('m-fill').style.background = color;
+    $('m-pct').textContent = (isFinite(shown)?shown.toFixed(0):'∞')+'%';
+    $('m-pct').className = shown<100 ? (shown<=50?'down3':'') : 'up3';
+    if(shown<100 && shown>50 && !stoppedOut){
+      $('a-note').innerHTML = '<span class="down3">⚠ margin-call zone</span> — '
+        + 'equity is near your used margin. One more bad day could stop you out.';
+    }
+  }
+
+  $('lev').oninput = () => { lev = +$('lev').value; $('lev-val').textContent = lev+'x'; };
+  $('go-long').onclick=()=>open(1);
+  $('go-short').onclick=()=>open(-1);
+  $('step').onclick=()=>step();
+  $('close').onclick=close;
+  $('reset').onclick=reset;
+  $('run').onclick=()=>{
+    if(position===0) return;
+    if(raf){cancelAnimationFrame(raf);raf=null;return;}
+    const loop=()=>{ if(step()) raf=requestAnimationFrame(loop); else raf=null; };
+    loop();
+  };
+  $('lev-val').textContent = $('lev').value+'x';
+  reset();
+})();
+</script>
+
+</body>
+</html>
