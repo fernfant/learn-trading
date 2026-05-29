@@ -12,18 +12,27 @@ There are exactly two programs that the student GROWS over the course. Never
 fork them into per-lesson copies — each lesson edits the same file and updates
 its in-file BUILD MAP comment.
 
-- **`market.py`** — Track 1 (normal trading). A simulator/backtester. Growth
-  ladder (one new loop line per lesson):
-  `L1 price += shock` → `L2 cash/shares` → `L3 equity = cash + shares*price`
-  → `L4 action = strategy(history)` → `L5 fills` → `L6 MA-crossover signal`
-  → `L7 position sizing` → `L8 metrics (return/Sharpe/drawdown)`
-  → `L9 fees + slippage` → `L10 capstone: beat buy-and-hold after costs`.
-- **`exchange.py`** — Track 2 (HFT). An order-book matching engine. Growth
-  ladder: `L11 book (bids/asks/spread)` → `L12 market order eats book`
-  → `L13 limit order rests (price-time priority)` → `L14 matching loop`
-  → `L15 market-data snapshots` → `L16 market maker quotes both sides`
-  → `L17 inventory skew` → `L18 latency/queue` → `L19 adverse selection`
-  → `L20 capstone: profitable AND flat market maker`.
+The course mimics **capital.com** (a CFD platform: leverage, long/short,
+spread, overnight funding, demo account). See `course/capital_com.md` for the
+platform mechanics and `course/index.md` for the full lesson↔book↔platform map.
+
+- **`market.py`** — Track 1 (trading on capital.com). A simulator/backtester
+  behaving like a capital.com demo account. Growth ladder (one new loop line
+  per lesson): `L1 price += shock` → `L2 bid/ask around a mid (spread)`
+  → `L3 long AND short (signed position)` → `L4 equity = cash + position*price`
+  → `L5 leverage & margin (call/stop-out)` → `L6 order types (limit/stop/TP)`
+  → `L7 position sizing` → `L8 MA-crossover signal`
+  → `L9 costs: half-spread + overnight swap + slippage`
+  → `L10 metrics (return/Sharpe/drawdown)`
+  → `L11 capstone: beat buy-and-hold after spread + fees`.
+- **`exchange.py`** — Track 2 (HFT). The machine capital.com is: an order-book
+  matching engine + market maker. Growth ladder: `L12 taker→maker bridge
+  (concept; spread flips cost→revenue)` → `L13 book (bids/asks/spread)`
+  → `L14 market order eats book` → `L15 limit order rests (price-time priority)`
+  → `L16 matching loop` → `L17 market-data + trade tape`
+  → `L18 market maker quotes both sides` → `L19 inventory skew`
+  → `L20 latency/queue` → `L21 adverse selection`
+  → `L22 capstone: profitable AND flat market maker`.
 
 ## Per-lesson files
 

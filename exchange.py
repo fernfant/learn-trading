@@ -6,7 +6,10 @@ sky. But where does that number come from? From an EXCHANGE matching buyers
 and sellers in an ORDER BOOK. Track 2 builds that machine, then puts a fast
 trading bot on top of it.
 
-Right now it is at the LESSON 11 stage: an order book is just two sorted
+The big flip: in Track 1 you PAID the spread to capital.com. Here you build the
+machine capital.com is — and you EARN the spread instead.
+
+Right now it is at the LESSON 13 stage: an order book is just two sorted
 lists — people willing to BUY (bids) and people willing to SELL (asks). The
 gap between the best of each is the SPREAD, and the spread is where an HFT
 market maker earns its living.
@@ -14,16 +17,17 @@ market maker earns its living.
 ------------------------------------------------------------------------------
 BUILD MAP  (Track 2 picks up where Track 1's capstone ends)
 ------------------------------------------------------------------------------
-  L11 the book exists        bids[], asks[], best_bid, best_ask, spread   <-- HERE
-  L12 a market order eats     fill against the top of the book
-  L13 a limit order rests     insert with price-time priority
-  L14 the matching loop       cross bids vs asks -> trades
-  L15 market data feed        top-of-book + depth snapshots
-  L16 a market maker          quote both sides, capture the spread
-  L17 inventory risk          skew quotes when you hold too much
-  L18 latency & the queue     why being 1 microsecond faster pays
-  L19 adverse selection       getting run over by informed flow
-  L20 CAPSTONE               a market maker that stays profitable AND flat
+  L12 taker -> maker          (concept) the spread flips from cost to revenue
+  L13 the book exists        bids[], asks[], best_bid, best_ask, spread   <-- HERE
+  L14 a market order eats     fill against the top of the book
+  L15 a limit order rests     insert with price-time priority
+  L16 the matching loop       cross bids vs asks -> trades
+  L17 market data & tape      top-of-book + depth snapshots + trade tape
+  L18 a market maker          quote both sides, capture the spread
+  L19 inventory risk          skew quotes when you hold too much
+  L20 latency & the queue     why being 1 microsecond faster pays
+  L21 adverse selection       getting run over by informed flow
+  L22 CAPSTONE               a market maker that stays profitable AND flat
 ------------------------------------------------------------------------------
 Run it:  python3 exchange.py
 """

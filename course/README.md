@@ -15,45 +15,54 @@ latency, market making).
 
 ---
 
-## 🟢 Track 1 — Normal trading → build [`../market.py`](../market.py)
+> **Built around capital.com.** The student will trade on
+> [capital.com](https://capital.com), a CFD platform, so the simulator mimics
+> it: two-sided prices, long *and* short, leverage, the spread, and real order
+> types. See [`capital_com.md`](capital_com.md) for the platform mechanics and
+> [`index.md`](index.md) for the full lesson↔book↔platform mapping. Practise on
+> capital.com's free **demo account** as you go.
+
+## 🟢 Track 1 — Trading on capital.com → build [`../market.py`](../market.py)
 
 You grow **one cumulative program**, `market.py`, adding ~one line per lesson,
-until it's a real backtester: price feed → strategy → portfolio → P&L →
-honest metrics.
+until it's a real backtester behaving like a capital.com demo account: prices →
+long/short → leverage → orders → risk → honest metrics, after costs.
 
 | # | Concept | Code | Walkthrough |
 |---|---------|------|-------------|
 | 1 | What is a price? (the random walk; why you can't predict it) | [`01_what_is_a_price.py`](01_what_is_a_price.py) | [`01_walkthrough.md`](01_walkthrough.md) ✅ |
-| 2 | Your first trade — cash, shares, position | `02_your_first_trade.py` | _soon_ |
-| 3 | What are you worth? — equity & P&L | `03_pnl.py` | _soon_ |
-| 4 | A strategy is just a rule — buy & hold baseline | `04_strategy.py` | _soon_ |
-| 5 | Orders & fills — market vs limit | `05_orders.py` | _soon_ |
-| 6 | A real signal — moving-average crossover | `06_signal.py` | _soon_ |
+| 2 | Bid, ask & the spread — there are always two prices | `02_bid_ask_spread.py` | _soon_ |
+| 3 | Your first trade: long **and** short (CFDs) | `03_long_and_short.py` | _soon_ |
+| 4 | P&L & equity — what are you worth? | `04_pnl.py` | _soon_ |
+| 5 | Leverage & margin — the double-edged sword | `05_leverage_margin.py` | _soon_ |
+| 6 | Order types — market, limit, stop, trailing, GSLO, take-profit | `06_order_types.py` | _soon_ |
 | 7 | Risk & position sizing — don't blow up | `07_risk.py` | _soon_ |
-| 8 | Backtesting honestly — return, Sharpe, drawdown | `08_backtest.py` | _soon_ |
-| 9 | Trading isn't free — fees & slippage kill strategies | `09_costs.py` | _soon_ |
-| 10 | **Capstone:** beat buy-and-hold on the sim, after costs | `10_capstone.md` | _soon_ |
+| 8 | A signal — moving-average crossover (+ honest skepticism) | `08_signal.py` | _soon_ |
+| 9 | Costs that kill — spread + overnight funding + slippage | `09_costs.py` | _soon_ |
+| 10 | Backtesting honestly — return, Sharpe, drawdown | `10_backtest.py` | _soon_ |
+| 11 | **Capstone:** beat buy-and-hold on the sim, *after* spread & fees | `11_capstone.md` | _soon_ |
 
-## 🔴 Track 2 — High-frequency trading → build [`../exchange.py`](../exchange.py)
+## 🔴 Track 2 — Inside the exchange / HFT → build [`../exchange.py`](../exchange.py)
 
-Where did "the price" come from? From an exchange matching orders. You grow a
-second cumulative program, `exchange.py`: an order book → a matching engine →
-a market maker that earns the spread.
+Where did "the price" and "the spread" come from? You flip seats and build the
+machine capital.com is: an order book → a matching engine → a **market maker**
+that *earns* the spread you paid in Track 1.
 
 | # | Concept | Code | Walkthrough |
 |---|---------|------|-------------|
-| 11 | The order book — bids, asks, the spread | [`../exchange.py`](../exchange.py) (seed) | _soon_ |
-| 12 | A market order eats the book | `12_market_order.py` | _soon_ |
-| 13 | A limit order rests — price-time priority | `13_limit_order.py` | _soon_ |
-| 14 | The matching loop — the heart of an exchange | `14_matching.py` | _soon_ |
-| 15 | Market data — top of book & depth | `15_market_data.py` | _soon_ |
-| 16 | A market maker — quote both sides, earn the spread | `16_market_maker.py` | _soon_ |
-| 17 | Inventory risk — skew your quotes | `17_inventory.py` | _soon_ |
-| 18 | Latency & the queue — why microseconds pay | `18_latency.py` | _soon_ |
-| 19 | Adverse selection — getting run over by informed flow | `19_adverse_selection.py` | _soon_ |
-| 20 | **Capstone:** a market maker that stays profitable *and* flat | `20_capstone.md` | _soon_ |
+| 12 | From price-taker to price-maker — the bridge | `12_taker_to_maker.md` | _soon_ |
+| 13 | The order book — bids, asks, depth, the spread | [`../exchange.py`](../exchange.py) (seed) | _soon_ |
+| 14 | A market order eats the book | `14_market_order.py` | _soon_ |
+| 15 | A limit order rests — price-time priority | `15_limit_order.py` | _soon_ |
+| 16 | The matching engine loop — the heart of an exchange | `16_matching.py` | _soon_ |
+| 17 | Market data & the tape — top of book & depth | `17_market_data.py` | _soon_ |
+| 18 | A market maker — quote both sides, earn the spread | `18_market_maker.py` | _soon_ |
+| 19 | Inventory risk — skew your quotes | `19_inventory.py` | _soon_ |
+| 20 | Latency & the queue — why microseconds pay | `20_latency.py` | _soon_ |
+| 21 | Adverse selection — getting run over by informed flow | `21_adverse_selection.py` | _soon_ |
+| 22 | **Capstone:** a market maker that stays profitable *and* flat | `22_capstone.md` | _soon_ |
 
-✅ = built · _soon_ = scaffolded, on the way
+✅ = built · _soon_ = planned. Full mapping with references: [`index.md`](index.md).
 
 ---
 

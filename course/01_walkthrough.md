@@ -109,6 +109,7 @@ lessons until it's a real backtester.
 
 ---
 
-**Next:** [Lesson 2 — Your first trade](02_your_first_trade.py) — we give you
-cash and let you buy a share. Now the wandering price starts costing or making
-you money.
+**Next:** [Lesson 2 — Bid, ask & the spread](02_bid_ask_spread.py) — there isn't
+*one* price. On capital.com there's a Buy price and a Sell price, and the gap
+between them (the spread) is the first cost you'll ever pay. Then in Lesson 3
+you place your first trade — long *or* short.

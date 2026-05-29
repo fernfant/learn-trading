@@ -7,19 +7,23 @@ backtester: a price feed -> a strategy -> a portfolio -> P&L -> metrics.
 Right now it is at the LESSON 1 stage: a price is just a number that wanders.
 That wandering line IS the market. Everything else we add later reacts to it.
 
+This mimics a capital.com DEMO account (see course/capital_com.md): two-sided
+prices, long & short, leverage, the spread, real order types, and the costs.
+
 ------------------------------------------------------------------------------
 BUILD MAP  (each lesson unlocks ~1 new line in the loop below)
 ------------------------------------------------------------------------------
   L1  price wanders          price += shock                      <-- YOU ARE HERE
-  L2  you can trade          cash -= price ; shares += 1
-  L3  what are you worth      equity = cash + shares * price
-  L4  a strategy decides     action = strategy(history)
-  L5  orders actually fill   if action == "buy": fill at price
-  L6  a real signal          signal = fast_avg > slow_avg
-  L7  size your bets         qty = risk_fraction * equity / price
-  L8  measure the result     return, sharpe, max_drawdown
-  L9  trading isn't free     cash -= fee + slippage
-  L10 CAPSTONE               beat buy-and-hold on the sim, after costs
+  L2  two prices, a spread   buy, sell = mid + s/2, mid - s/2
+  L3  long AND short         position += qty   (qty can be negative)
+  L4  what are you worth      equity = cash + position * price
+  L5  leverage & margin      margin = abs(position)*price / leverage
+  L6  order types            trigger limit / stop / take-profit
+  L7  size your bets         qty = risk_frac * equity / stop_distance
+  L8  a real signal          signal = fast_avg > slow_avg
+  L9  trading isn't free     cash -= half_spread + overnight_swap
+  L10 measure the result     return, sharpe, max_drawdown
+  L11 CAPSTONE               beat buy-and-hold on the sim, after spread + fees
 ------------------------------------------------------------------------------
 Run it:  python3 market.py
 """
