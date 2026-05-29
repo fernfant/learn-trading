@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>L1 · What is a price? — Learn to Trade</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .wkrow{display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap}
+  .wkrow canvas{flex:1;min-width:300px}
+  .ctrls{flex:1;min-width:220px}
+  .stat{font-family:ui-monospace,monospace;line-height:1.9;margin-top:6px}
+  .stat b{color:var(--ink)}
+  .up3{color:var(--up2);font-weight:700}
+  .down3{color:var(--down2);font-weight:700}
+  .guess{display:flex;gap:10px;margin:6px 0 4px}
+  .guess button{flex:1}
+  .meter{height:10px;border-radius:6px;background:var(--code-bg);border:1px solid var(--line);
+    overflow:hidden;margin:10px 0 4px;position:relative}
+  .meter .fill{height:100%;background:var(--accent);width:50%;transition:width .2s ease}
+  .meter .mid{position:absolute;left:50%;top:-3px;bottom:-3px;width:1px;background:var(--dim)}
+  .big{font-size:30px;font-weight:800;font-family:ui-monospace,monospace}
+  .reveal{font-family:ui-monospace,monospace;min-height:24px;margin-top:6px}
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <a href="index.html" class="brand">📈 Learn to Trade</a>
+  <div class="lesson-pills">
+    <a href="index.html">Index</a>
+    <a class="t1 current" href="lesson_01.html">L1</a>
+    <a class="t1" href="lesson_02.html">L2</a>
+    <a class="t1" href="index.html#l3">L3</a>
+    <a class="t1" href="index.html#track1">T1</a>
+    <a class="t2" href="index.html#track2">T2</a>
+  </div>
+</nav>
+
+<div class="wrap">
+
+<h1>Lesson 1 · What is a price?</h1>
+<p class="subtitle">Before you can trade against a price, you have to know what a price <em>is</em>. It is not a
+fixed fact like "this chocolate bar costs $2." It is a living number that <strong>wanders</strong> — and the
+single most important, most annoying fact in trading is that <strong>you can't know which way it goes next.</strong></p>
+
+<div class="demo">
+  <h3>📈 Watch a price wander</h3>
+  <p class="subtitle" style="margin:4px 0 12px">Every day the price gets nudged by a small random <em>shock</em> —
+  up just as often as down, usually small, occasionally big. Nobody picks the shock. Step it a day at a time,
+  or let it run, and watch a line appear out of pure chance.</p>
+  <div class="wkrow">
+    <canvas id="walk" width="900" height="220"></canvas>
+    <div class="ctrls">
+      <div class="stat">
+        start <b>$100.00</b><br>
+        day <b id="w-day">0</b><br>
+        price <b id="w-price">$100.00</b><br>
+        last shock <span id="w-shock">—</span>
+      </div>
+      <div class="btnrow">
+        <button id="w-step">▶ Next day</button>
+        <button id="w-run">⏩ Run 60</button>
+        <button id="w-reset">↻ New market</button>
+      </div>
+      <p class="subtitle" style="margin:6px 0 0;font-size:13px">Reset a few times. Some markets drift up, some
+      crash, some chop sideways — <em>same rule every time.</em> The shape is an accident.</p>
+    </div>
+  </div>
+</div>
+
+<div class="callout info">
+  💡 This is called a <strong>random walk</strong>. The wiggly line <em>looks</em> like it has trends and
+  patterns you could trade — your brain is wired to see them. The next demo tests whether those patterns are real.
+</div>
+
+<div class="demo">
+  <h3>🪙 Beat the coin</h3>
+  <p class="subtitle" style="margin:4px 0 12px">The classic beginner instinct: "it went up, so it'll keep going up"
+  (<em>momentum</em>). Predict tomorrow's move. We reveal the real shock and keep score. See if you can stay
+  above <b style="color:var(--accent)">50%</b> — a coin flip.</p>
+  <div class="guess">
+    <button class="up" id="g-up">▲ Up next</button>
+    <button class="down" id="g-down">▼ Down next</button>
+  </div>
+  <div class="reveal" id="g-reveal">Make a call…</div>
+  <div class="meter"><div class="fill" id="g-fill"></div><div class="mid"></div></div>
+  <div class="stat">your hit rate <span class="big" id="g-rate">—</span> &nbsp;
+    <span class="tally">(<b id="g-correct">0</b> right of <b id="g-total">0</b>)</span></div>
+  <div class="btnrow">
+    <button id="g-auto">🤖 Auto-play 10,000 momentum bets</button>
+    <button id="g-clear">↻ Clear score</button>
+  </div>
+  <p class="subtitle" style="margin:6px 0 0;font-size:13px">Let the robot play the "same as yesterday" strategy
+  10,000 times. It lands on ~50.0%. In a true random walk, <strong>yesterday tells you nothing about today.</strong></p>
+</div>
+
+<div class="callout warn">
+  <strong>Why this matters:</strong> real markets aren't <em>perfectly</em> random — but they're close enough that
+  beating a coin flip, after costs, is the entire hard game. Most people who think they see a pattern are losing
+  to randomness and fees. Track 1 is about finding a <em>real</em> edge; Lesson 2 introduces the first cost that
+  eats it — the <strong>spread</strong>.
+</div>
+
+<div class="recap">
+  <div class="r-title">✅ You can now say…</div>
+  <ul>
+    <li>A price is a number that changes every time someone trades — it <em>wanders</em>.</li>
+    <li>The core model is a <strong>random walk</strong>: <code>price += shock</code>, a fresh random nudge each step.</li>
+    <li>In a pure random walk, predicting the next move beats a coin flip <strong>0%</strong> of the time — it stays at 50%.</li>
+    <li>This is the one line you just added to <code>market.py</code>: <code>mid += random.gauss(0, 1)</code>.</li>
+  </ul>
+</div>
+
+<p style="margin-top:24px">
+  <a href="index.html">← Back to index</a> &nbsp;·&nbsp;
+  <a href="lesson_02.html"><strong>L2: Bid, ask &amp; the spread →</strong></a>
+</p>
+
+</div>
+
+<footer class="site">
+  Built by <a href="https://github.com/fernfant">@fernfant</a> ·
+  <a href="https://github.com/fernfant/learn-trading">source on GitHub</a> · MIT licensed
+</footer>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  // shared gaussian (Box–Muller)
+  function gauss(){
+    let u=0,v=0; while(!u)u=Math.random(); while(!v)v=Math.random();
+    return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);
+  }
+
+  // ---- Demo 1: the wandering price ----
+  const cv = $('walk'), ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height, PAD = 28, MAXD = 60;
+  let hist, day, lastShock, raf=null;
+
+  function resetWalk(){
+    if(raf){cancelAnimationFrame(raf);raf=null;}
+    hist=[100]; day=0; lastShock=null; drawWalk(); readWalk();
+  }
+  function drawWalk(){
+    ctx.clearRect(0,0,W,H);
+    const lo=Math.min(...hist), hi=Math.max(...hist), span=(hi-lo)||1;
+    const x = i => PAD + i*(W-2*PAD)/MAXD;
+    const y = p => PAD + (1-(p-lo)/span)*(H-2*PAD);
+    // baseline at 100
+    ctx.strokeStyle='#2b333d'; ctx.setLineDash([4,4]); ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(PAD,y(100)); ctx.lineTo(W-PAD,y(100)); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle='#5a636e'; ctx.font='11px ui-monospace,monospace'; ctx.textAlign='left';
+    ctx.fillText('$100', PAD+2, y(100)-4);
+    // line
+    const end=hist[hist.length-1];
+    ctx.strokeStyle = end>=100 ? '#34d399' : '#f87171'; ctx.lineWidth=2;
+    ctx.beginPath();
+    hist.forEach((p,i)=>{ i?ctx.lineTo(x(i),y(p)):ctx.moveTo(x(i),y(p)); });
+    ctx.stroke();
+    // dot
+    ctx.fillStyle = end>=100 ? '#26a17b' : '#e5484d';
+    ctx.beginPath(); ctx.arc(x(hist.length-1),y(end),4,0,7); ctx.fill();
+  }
+  function readWalk(){
+    const p=hist[hist.length-1];
+    $('w-day').textContent=day;
+    $('w-price').textContent='$'+p.toFixed(2);
+    if(lastShock===null){ $('w-shock').textContent='—'; }
+    else {
+      $('w-shock').innerHTML = lastShock>0
+        ? `<span class="up3">+${lastShock.toFixed(2)} ▲</span>`
+        : `<span class="down3">${lastShock.toFixed(2)} ▼</span>`;
+    }
+  }
+  function stepWalk(){
+    if(day>=MAXD) return false;
+    lastShock=gauss(); hist.push(hist[hist.length-1]+lastShock); day++;
+    drawWalk(); readWalk(); return true;
+  }
+  $('w-step').onclick=()=>stepWalk();
+  $('w-reset').onclick=resetWalk;
+  $('w-run').onclick=()=>{
+    if(raf){cancelAnimationFrame(raf);raf=null;return;}
+    if(day>=MAXD) resetWalk();
+    const loop=()=>{ if(stepWalk()) raf=requestAnimationFrame(loop); else raf=null; };
+    loop();
+  };
+  resetWalk();
+
+  // ---- Demo 2: beat the coin ----
+  let correct=0, total=0, prevShock=null;
+  function paint(){
+    $('g-correct').textContent=correct;
+    $('g-total').textContent=total;
+    const r = total? 100*correct/total : null;
+    $('g-rate').textContent = r===null ? '—' : r.toFixed(1)+'%';
+    $('g-rate').className = 'big ' + (r===null?'':(r>52?'up3':r<48?'down3':''));
+    $('g-fill').style.width = (r===null?50:r)+'%';
+  }
+  function guess(up){
+    const shock=gauss();
+    const right = (shock>0)===up;
+    total++; if(right) correct++;
+    $('g-reveal').innerHTML = `actual move ` + (shock>0
+      ? `<span class="up3">+${shock.toFixed(2)} ▲</span>` : `<span class="down3">${shock.toFixed(2)} ▼</span>`)
+      + ` — you were ` + (right?`<span class="up3">right</span>`:`<span class="down3">wrong</span>`);
+    paint();
+  }
+  $('g-up').onclick=()=>guess(true);
+  $('g-down').onclick=()=>guess(false);
+  $('g-clear').onclick=()=>{correct=0;total=0;prevShock=null;$('g-reveal').textContent='Make a call…';paint();};
+  $('g-auto').onclick=()=>{
+    // momentum: predict "same direction as yesterday", 10k times
+    let last=0;
+    for(let i=0;i<10000;i++){
+      const shock=gauss();
+      if(last!==0){ total++; if((shock>0)===(last>0)) correct++; }
+      last=shock;
+    }
+    $('g-reveal').innerHTML='🤖 momentum strategy ran 10,000 times → settles near <b>50%</b>';
+    paint();
+  };
+  paint();
+})();
+</script>
+
+</body>
+</html>
