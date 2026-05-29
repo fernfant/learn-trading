@@ -31,7 +31,7 @@ long/short → leverage → orders → risk → honest metrics, after costs.
 | # | Concept | Code | Walkthrough |
 |---|---------|------|-------------|
 | 1 | What is a price? (the random walk; why you can't predict it) | [`01_what_is_a_price.py`](01_what_is_a_price.py) | [`01_walkthrough.md`](01_walkthrough.md) ✅ |
-| 2 | Bid, ask & the spread — there are always two prices | `02_bid_ask_spread.py` | _soon_ |
+| 2 | Bid, ask & the spread — there are always two prices | [`02_bid_ask_spread.py`](02_bid_ask_spread.py) | [`02_walkthrough.md`](02_walkthrough.md) ✅ |
 | 3 | Your first trade: long **and** short (CFDs) | `03_long_and_short.py` | _soon_ |
 | 4 | P&L & equity — what are you worth? | `04_pnl.py` | _soon_ |
 | 5 | Leverage & margin — the double-edged sword | `05_leverage_margin.py` | _soon_ |

@@ -4,8 +4,9 @@ market.py — the cumulative artifact for TRACK 1 (normal trading).
 You build this ONE LINE AT A TIME, one line per lesson, until it is a real
 backtester: a price feed -> a strategy -> a portfolio -> P&L -> metrics.
 
-Right now it is at the LESSON 1 stage: a price is just a number that wanders.
-That wandering line IS the market. Everything else we add later reacts to it.
+Right now it is at the LESSON 2 stage: there isn't one price. The "true" price
+(the MID) wanders, and around it capital.com quotes a BUY and a SELL price. The
+gap between them is the SPREAD — the first cost you ever pay.
 
 This mimics a capital.com DEMO account (see course/capital_com.md): two-sided
 prices, long & short, leverage, the spread, real order types, and the costs.
@@ -13,8 +14,8 @@ prices, long & short, leverage, the spread, real order types, and the costs.
 ------------------------------------------------------------------------------
 BUILD MAP  (each lesson unlocks ~1 new line in the loop below)
 ------------------------------------------------------------------------------
-  L1  price wanders          price += shock                      <-- YOU ARE HERE
-  L2  two prices, a spread   buy, sell = mid + s/2, mid - s/2
+  L1  price wanders          mid += shock
+  L2  two prices, a spread   buy, sell = mid + s/2, mid - s/2     <-- YOU ARE HERE
   L3  long AND short         position += qty   (qty can be negative)
   L4  what are you worth      equity = cash + position * price
   L5  leverage & margin      margin = abs(position)*price / leverage
@@ -35,19 +36,26 @@ import random
 random.seed(7)
 
 DAYS = 60
-price = 100.0          # the stock starts at $100
-history = [price]      # we remember every day's price so we can look back
+SPREAD = 0.10          # capital.com shows two prices; this gap is its fee (L2)
+mid = 100.0            # the "true" price, halfway between Buy and Sell
+history = [mid]        # we remember every day's mid so we can look back
+buy = sell = mid       # today's two prices (filled in each day below)
 
 for day in range(DAYS):
     # ---- THE MARKET'S ONE RULE (Lesson 1) -----------------------------------
     # Each day the price gets nudged up or down by a small random "shock".
     # gauss(0, 1) means: usually a small nudge, occasionally a big one,
-    # up just as often as down. Nobody knows tomorrow's shock. That is
-    # the whole point of a market.
+    # up just as often as down. Nobody knows tomorrow's shock.
     shock = random.gauss(0, 1)
-    price += shock
+    mid += shock
+    # ---- TWO PRICES, A SPREAD (Lesson 2) ------------------------------------
+    # You can't trade at the mid. To go LONG you pay the higher Buy price; to
+    # go SHORT (or close a long) you get the lower Sell price. The difference
+    # is the spread, and you pay half of it each time you cross.
+    buy = mid + SPREAD / 2     # ask — what you pay to buy
+    sell = mid - SPREAD / 2    # bid — what you get to sell
     # -------------------------------------------------------------------------
-    history.append(price)
+    history.append(mid)
 
 
 def ascii_chart(series, width=60, height=12):
@@ -64,19 +72,23 @@ def ascii_chart(series, width=60, height=12):
     return "\n".join(rows)
 
 
-print(f"Start: ${history[0]:.2f}   End: ${history[-1]:.2f}   "
+print(f"Start mid: ${history[0]:.2f}   End mid: ${history[-1]:.2f}   "
       f"High: ${max(history):.2f}   Low: ${min(history):.2f}")
 print(ascii_chart(history))
 print(" " * 9 + "+" + "-" * 60)
 print(" " * 10 + f"day 0{' ' * 49}day {DAYS}")
+print(f"\nToday's quote:  SELL ${sell:.2f}  |  mid ${mid:.2f}  |  BUY ${buy:.2f}")
+print(f"Spread = ${SPREAD:.2f}. Buy now and sell instantly and you're already "
+      f"down ${SPREAD:.2f} — that's the broker's fee.")
 
 
 # -----------------------------------------------------------------------------
 # TRY IT (exercises)
 # -----------------------------------------------------------------------------
-# 1. Change random.seed(7) to random.seed(1). Different market, same rules.
-# 2. Make the shocks bigger: random.gauss(0, 3). What happens to High/Low?
-# 3. Add a "drift": price += shock + 0.1  (a tiny up-bias every day). Run it a
-#    few seeds. Does the stock usually end higher now? This is roughly why
-#    the stock market tends to rise over decades.
-# 4. Print history[10] — what was the price on day 10?
+# 1. Widen the spread to SPREAD = 1.00. How much does an instant round-trip
+#    (buy then sell) now cost you? (Answer: the full spread.)
+# 2. capital.com spreads are tighter on big markets, wider on small ones. Which
+#    SPREAD would you rather trade, 0.05 or 0.50? Why?
+# 3. Print buy - sell. It always equals SPREAD — that's the definition.
+# 4. A "1X" (no-leverage) share trade still pays the spread. Roughly how many
+#    round-trips at SPREAD = 0.10 would cost you $1?

@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>L2 · Bid, ask & the spread — Learn to Trade</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .ladder{display:flex;gap:26px;align-items:center;flex-wrap:wrap;margin:8px 0}
+  .rungs{position:relative;width:230px;height:230px;background:var(--code-bg);
+    border:1px solid var(--line);border-radius:12px}
+  .rung{position:absolute;left:0;right:0;display:flex;align-items:center;gap:10px;
+    padding:0 12px;transition:top .15s ease}
+  .rung .lab{font-size:12px;font-weight:700;letter-spacing:.04em;width:40px}
+  .rung .px{font-family:ui-monospace,monospace;font-weight:700;font-size:15px}
+  .rung.buy{color:var(--down2)} .rung.buy .bar{background:var(--down)}
+  .rung.sell{color:var(--up2)}  .rung.sell .bar{background:var(--up)}
+  .rung.mid{color:var(--dim)}
+  .bar{height:3px;flex:1;border-radius:2px;background:var(--line)}
+  .spreadband{position:absolute;left:54px;right:14px;background:#f0b42922;
+    border-top:1px dashed var(--accent);border-bottom:1px dashed var(--accent);transition:all .15s ease}
+  .spreadband .lbl{position:absolute;right:6px;top:50%;transform:translateY(-50%);
+    color:var(--accent);font-size:12px;font-weight:700}
+  .ctrls{flex:1;min-width:240px}
+  .ctrls label{display:block;color:var(--dim);font-size:14px;margin-bottom:6px}
+  input[type=range]{width:100%;accent-color:var(--accent)}
+  .readout{font-family:ui-monospace,monospace;margin-top:14px;line-height:1.9}
+  .readout .loss{color:var(--down2);font-weight:700}
+  .readout .ok{color:var(--up2);font-weight:700}
+  .stepwrap{margin-top:8px}
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <a href="index.html" class="brand">📈 Learn to Trade</a>
+  <div class="lesson-pills">
+    <a href="index.html">Index</a>
+    <a class="t1" href="index.html#l1">L1</a>
+    <a class="t1 current" href="lesson_02.html">L2</a>
+    <a class="t1" href="index.html#l3">L3</a>
+    <a class="t1" href="index.html#track1">T1</a>
+    <a class="t2" href="index.html#track2">T2</a>
+  </div>
+</nav>
+
+<div class="wrap">
+
+<h1>Lesson 2 · Bid, ask &amp; the spread</h1>
+<p class="subtitle">Lesson 1 said a stock has a price. It lied. On capital.com there are always
+<strong>two</strong> — and you never get the nice one.</p>
+
+<div class="demo">
+  <h3>🪜 The quote ladder — drag the spread</h3>
+  <p class="subtitle" style="margin:4px 0 12px">capital.com quotes a <span style="color:var(--down2);font-weight:700">BUY</span>
+  price (you buy high) and a <span style="color:var(--up2);font-weight:700">SELL</span> price (you sell low),
+  straddling the fair <em>mid</em>. The gap is the spread. Widen it and watch the cost grow.</p>
+  <div class="ladder">
+    <div class="rungs" id="rungs">
+      <div class="spreadband" id="band"><span class="lbl" id="bandlbl">0.10</span></div>
+      <div class="rung buy" id="r-buy"><span class="lab">BUY</span><span class="bar"></span><span class="px" id="p-buy"></span></div>
+      <div class="rung mid" id="r-mid"><span class="lab">mid</span><span class="bar"></span><span class="px" id="p-mid"></span></div>
+      <div class="rung sell" id="r-sell"><span class="lab">SELL</span><span class="bar"></span><span class="px" id="p-sell"></span></div>
+    </div>
+    <div class="ctrls">
+      <label>Spread: <b id="sv" style="color:var(--accent)">$0.10</b> &nbsp;<span id="tight"></span></label>
+      <input type="range" id="spread" min="2" max="100" value="10">
+      <div class="readout">
+        Buy 1 unit, sell it back <em>instantly</em> (no price move):<br>
+        pay <span id="rt-pay"></span> · get <span id="rt-get"></span> · result <span class="loss" id="rt-res"></span><br>
+        <span style="color:var(--dim)">You lost the whole spread — for doing nothing.</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="demo">
+  <h3>📈 The spread is a hurdle</h3>
+  <p class="subtitle" style="margin:4px 0 12px">You went <b>long</b> at the BUY price. To exit you must SELL (lower).
+  So the mid has to climb by a <em>full spread</em> before you even break even. Step the market and watch your P&amp;L
+  lag behind the mid.</p>
+  <div class="readout" id="hud" style="margin-top:0"></div>
+  <div class="btnrow stepwrap">
+    <button id="step">▶ Next day</button>
+    <button id="re">↻ New trade</button>
+    <span class="tally">spread hurdle = <b id="hurdle"></b></span>
+  </div>
+</div>
+
+<div class="callout warn">
+  <strong>On capital.com:</strong> spreads are tighter on big liquid markets, wider on small/volatile ones,
+  and widen outside market hours. Trade more often → pay the spread more often. It's why a fresh position
+  shows a small red number the instant you open it.
+</div>
+
+<div class="callout info">
+  🔁 <strong>Foreshadow:</strong> someone is on the <em>other</em> side of this spread, collecting it.
+  In <a href="index.html#track2">Track 2</a> that someone is <strong>you</strong> — the market maker.
+</div>
+
+<p style="margin-top:24px">
+  <a href="index.html#l1">← L1: What is a price?</a> &nbsp;·&nbsp;
+  <a href="index.html#l3"><strong>L3: Your first trade — long &amp; short →</strong></a>
+</p>
+
+</div>
+
+<footer class="site">
+  Built by <a href="https://github.com/fernfant">@fernfant</a> ·
+  <a href="https://github.com/fernfant/learn-trading">source on GitHub</a> · MIT licensed
+</footer>
+
+<script>
+(() => {
+  const MID = 100, H = 230, midY = H/2;
+  const $ = id => document.getElementById(id);
+  // ---- ladder + slider ----
+  function place(el, y){ el.style.top = (y - 11) + 'px'; }
+  function render(){
+    const spread = $('spread').value / 100;
+    const half = spread / 2;
+    const buy = MID + half, sell = MID - half;
+    // Visual offset: a fixed minimum gap (so rungs never overlap at tight
+    // spreads) plus a linear term (so widening is clearly visible). Stays
+    // on-card even at the max $1.00 spread.
+    const off = half * 120 + 18;
+    const buyY = midY - off, sellY = midY + off;
+    place($('r-buy'), buyY); place($('r-mid'), midY); place($('r-sell'), sellY);
+    const band = $('band'); band.style.top = buyY+'px'; band.style.height = (sellY-buyY)+'px';
+    $('bandlbl').textContent = spread.toFixed(2);
+    $('p-buy').textContent = '$'+buy.toFixed(2);
+    $('p-mid').textContent = '$'+MID.toFixed(2);
+    $('p-sell').textContent = '$'+sell.toFixed(2);
+    $('sv').textContent = '$'+spread.toFixed(2);
+    $('tight').textContent = spread<=0.06 ? '🟢 tight / liquid' : spread>=0.5 ? '🔴 wide / illiquid' : '🟡 typical';
+    $('rt-pay').textContent = '$'+buy.toFixed(2);
+    $('rt-get').textContent = '$'+sell.toFixed(2);
+    $('rt-res').textContent = (sell-buy).toFixed(2);
+    resetTrade();
+  }
+  $('spread').addEventListener('input', render);
+
+  // ---- hurdle stepper ----
+  let mid, entryBuy, day, seedState;
+  function gauss(){ // Box–Muller
+    let u=0,v=0; while(!u)u=Math.random(); while(!v)v=Math.random();
+    return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);
+  }
+  function resetTrade(){
+    const spread = $('spread').value/100;
+    mid = MID; entryBuy = MID + spread/2; day = 0;
+    $('hurdle').textContent = '$'+spread.toFixed(2);
+    drawHud(0);
+  }
+  function drawHud(pnl){
+    const spread = $('spread').value/100;
+    const cls = pnl>0 ? 'ok' : 'loss';
+    $('hud').innerHTML =
+      `entry BUY <b>$${entryBuy.toFixed(2)}</b> &nbsp;|&nbsp; day <b>${day}</b><br>`+
+      `mid <b>$${mid.toFixed(2)}</b> · exit-SELL <b>$${(mid-spread/2).toFixed(2)}</b> &nbsp;→&nbsp; `+
+      `P&L <span class="${cls}">${pnl>=0?'+':''}${pnl.toFixed(2)}</span>`;
+  }
+  $('step').onclick = () => {
+    const spread = $('spread').value/100;
+    mid += gauss(); day++;
+    const pnl = (mid - spread/2) - entryBuy;
+    drawHud(pnl);
+  };
+  $('re').onclick = resetTrade;
+
+  render();
+})();
+</script>
+
+</body>
+</html>
