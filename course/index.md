@@ -21,7 +21,7 @@ spread, real order types, and the costs that quietly decide who wins.
 | 1 ✅ | What is a price? (random walk; why you can't predict it) | `price += shock` | the live price chart | Malkiel, *Random Walk Down Wall Street* |
 | 2 ✅ | Bid, ask & the spread (there are always two prices) | `buy/sell` around a mid | Buy/Sell price; the spread | BabyPips, *School of Pipsology* |
 | 3 ✅ | Your first trade: long **and** short | signed `position`, `cash` | Buy = long, Sell = short (CFD) | capital.com — CFD basics |
-| 4 ◻︎ | P&L & equity (realized vs unrealized) | `equity = cash + position*price` | open P&L, account equity | Investopedia — P&L |
+| 4 ✅ | P&L & equity (realized vs unrealized) | `equity = cash + position*price` | open P&L, account equity | Investopedia — P&L |
 | 5 ◻︎ | Leverage & margin (the double-edged sword) | `margin = notional/leverage` | leverage; 75/100% call, 50% stop-out | BabyPips — leverage & margin |
 | 6 ◻︎ | Order types (market, limit, stop, trailing, GSLO, take-profit) | trigger checks each step | capital.com's order menu | Harris, *Trading & Exchanges* (ch. on orders) |
 | 7 ◻︎ | Risk & position sizing (don't blow up) | `qty = risk_frac*equity/stop_dist` | risk per trade; the demo as practice | Van Tharp, *Trade Your Way…* |

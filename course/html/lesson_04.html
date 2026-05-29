@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>L4 · P&amp;L &amp; equity — Learn to Trade</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .wkrow{display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap}
+  .wkrow canvas{flex:1.4;min-width:320px}
+  .ctrls{flex:1;min-width:260px}
+  .dirpick{display:flex;gap:10px;margin-bottom:10px}
+  .dirpick button{flex:1}
+  .acct{font-family:ui-monospace,monospace;line-height:1.6;margin:6px 0 2px}
+  .acct .row{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--line)}
+  .acct .row span:first-child{color:var(--dim)}
+  .acct .row b{color:var(--ink)}
+  .eqbig{font-size:30px;font-weight:800;font-family:ui-monospace,monospace;margin:8px 0 2px}
+  .up3{color:var(--up2);font-weight:700} .down3{color:var(--down2);font-weight:700}
+  .badge{display:inline-block;font-size:12px;font-weight:700;padding:2px 9px;border-radius:999px}
+  .badge.long{background:var(--up);color:#03130d} .badge.short{background:var(--down);color:#1b0405}
+  .badge.flat{background:var(--panel2);color:var(--dim);border:1px solid var(--line)}
+  .formula{font-family:ui-monospace,monospace;font-size:13px;color:var(--dim);margin-top:6px}
+  .note{font-family:ui-monospace,monospace;font-size:13px;min-height:20px;margin-top:4px}
+  button:disabled{opacity:.4;cursor:not-allowed;filter:none}
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <a href="index.html" class="brand">📈 Learn to Trade</a>
+  <div class="lesson-pills">
+    <a href="index.html">Index</a>
+    <a class="t1" href="lesson_01.html">L1</a>
+    <a class="t1" href="lesson_02.html">L2</a>
+    <a class="t1" href="lesson_03.html">L3</a>
+    <a class="t1 current" href="lesson_04.html">L4</a>
+    <a class="t1" href="index.html#l5">L5</a>
+    <a class="t2" href="index.html#track2">T2</a>
+  </div>
+</nav>
+
+<div class="wrap">
+
+<h1>Lesson 4 · P&amp;L &amp; equity — what are you worth?</h1>
+<p class="subtitle">You can open a trade. Now: <em>am I up or down?</em> Two numbers answer it.
+<strong>Balance</strong> is your settled cash — it sits still while a trade is open.
+<strong>Equity</strong> is your live net worth — cash plus the value of what you're holding.
+The gap between them is your <em>unrealized</em> P&amp;L: paper, not money, until you close.</p>
+
+<div class="demo">
+  <h3>💰 Your account, marked to market</h3>
+  <p class="subtitle" style="margin:4px 0 12px">Open 10 units, step the market, and watch the
+  <b style="color:var(--accent)">equity curve</b> breathe while the <b>balance</b> stays frozen. Hit
+  <b>Close</b> to turn paper profit into real cash — equity and balance snap together.</p>
+  <div class="wkrow">
+    <canvas id="chart" width="900" height="240"></canvas>
+    <div class="ctrls">
+      <div class="dirpick">
+        <button class="up" id="go-long">▲ Long 10</button>
+        <button class="down" id="go-short">▼ Short 10</button>
+      </div>
+      <div class="acct">
+        <div class="row"><span>balance (cash)</span><b id="a-cash">$2000.00</b></div>
+        <div class="row"><span>position</span><b><span class="badge flat" id="a-side">FLAT</span></b></div>
+        <div class="row"><span>open P&amp;L (paper)</span><b id="a-unreal">$0.00</b></div>
+      </div>
+      <div class="eqbig" id="a-equity">$2000.00</div>
+      <div class="formula" id="a-formula">equity = cash + position × price</div>
+      <div class="note" id="a-note"></div>
+      <div class="btnrow">
+        <button id="step" disabled>▶ Next day</button>
+        <button id="run" disabled>⏩ Run 10</button>
+        <button id="close" disabled>✗ Close</button>
+        <button id="reset">↻ New account</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="callout info">
+  💡 <strong>Equity is the honest scoreboard.</strong> The instant you open, equity drops by a full
+  spread — it already counts the toll you'd pay to exit (Lesson 2). Balance won't show that loss until
+  you actually close. Watch the curve start <em>below</em> the dashed $2000 line.
+</div>
+
+<div class="callout warn">
+  <strong>Paper isn't cash.</strong> A juicy unrealized profit can evaporate before you close — it was
+  never in your balance. Many traders blow up by treating equity like money in the bank. On capital.com,
+  every margin warning in the next lesson is driven by <em>equity</em>, not balance.
+</div>
+
+<div class="recap">
+  <div class="r-title">✅ You can now say…</div>
+  <ul>
+    <li><strong>Balance</strong> = settled cash (moves only on close). <strong>Equity</strong> = cash + live position value.</li>
+    <li><strong>Unrealized</strong> P&amp;L is paper and moves every tick; <strong>realized</strong> P&amp;L is locked into cash when you close.</li>
+    <li>The line you added to <code>market.py</code>: <code>equity = cash + position * price</code>.</li>
+    <li>Equity already reflects the spread you'd pay to exit — it's what really matters.</li>
+  </ul>
+</div>
+
+<p style="margin-top:24px">
+  <a href="lesson_03.html">← L3: Long &amp; short</a> &nbsp;·&nbsp;
+  <a href="index.html#l5"><strong>L5: Leverage &amp; margin — the double-edged sword →</strong></a>
+</p>
+
+</div>
+
+<footer class="site">
+  Built by <a href="https://github.com/fernfant">@fernfant</a> ·
+  <a href="https://github.com/fernfant/learn-trading">source on GitHub</a> · MIT licensed
+</footer>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const START = 2000, QTY = 10, SPREAD = 0.10, ENTRY_MID = 100, MAXD = 12;
+  function gauss(){ let u=0,v=0; while(!u)u=Math.random(); while(!v)v=Math.random();
+    return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+
+  const cv = $('chart'), ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height, PAD = 34;
+  let cash, position, entry, mid, day, eqHist, raf=null;
+
+  const markPrice = () => position>0 ? mid-SPREAD/2 : position<0 ? mid+SPREAD/2 : mid;
+  const equityNow = () => cash + position * markPrice();
+
+  function setButtons(){
+    const open = position!==0;
+    $('go-long').disabled = open; $('go-short').disabled = open;
+    $('step').disabled = !open; $('run').disabled = !open; $('close').disabled = !open;
+  }
+
+  function reset(){
+    if(raf){cancelAnimationFrame(raf);raf=null;}
+    cash=START; position=0; entry=0; mid=ENTRY_MID; day=0; eqHist=[START];
+    $('a-note').textContent=''; setButtons(); draw(); paint();
+  }
+  function open(d){
+    if(position!==0) return;
+    mid=ENTRY_MID; day=0;
+    entry = d>0 ? mid+SPREAD/2 : mid-SPREAD/2;   // cross to the bad side
+    position = d*QTY;
+    cash -= position * entry;                    // buy spends cash, short brings it in
+    eqHist=[equityNow()];
+    $('a-note').textContent=''; setButtons(); draw(); paint();
+  }
+  function step(){
+    if(position===0 || day>=MAXD) return false;
+    mid += gauss(); day++; eqHist.push(equityNow()); draw(); paint(); return true;
+  }
+  function close(){
+    if(position===0) return;
+    if(raf){cancelAnimationFrame(raf);raf=null;}
+    const closePrice = markPrice();
+    cash += position * closePrice;               // settle the position into cash
+    position = 0; entry = 0;
+    const realized = cash - START;
+    eqHist.push(cash);
+    $('a-note').innerHTML = `closed → realized <b class="${realized>=0?'up3':'down3'}">`
+      + (realized>=0?'+':'')+realized.toFixed(2) + `</b> into balance`;
+    setButtons(); draw(); paint();
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    const all = eqHist.concat([START]);
+    let lo=Math.min(...all), hi=Math.max(...all);
+    if(hi-lo < 20){ const c=(hi+lo)/2; lo=c-10; hi=c+10; }
+    const pad=(hi-lo)*0.15; lo-=pad; hi+=pad;
+    const x = i => PAD + i*(W-2*PAD)/MAXD;
+    const y = v => PAD + (1-(v-lo)/(hi-lo))*(H-2*PAD);
+    // start-balance reference
+    ctx.strokeStyle='#5a636e'; ctx.setLineDash([4,4]); ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(PAD,y(START)); ctx.lineTo(W-PAD,y(START)); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle='#7d8895'; ctx.font='11px ui-monospace,monospace'; ctx.textAlign='left';
+    ctx.fillText('start $'+START, PAD+2, y(START)-4);
+    // equity curve
+    const end=eqHist[eqHist.length-1];
+    ctx.strokeStyle = end>=START ? '#34d399' : '#f87171'; ctx.lineWidth=2;
+    ctx.beginPath();
+    eqHist.forEach((v,i)=>{ i?ctx.lineTo(x(i),y(v)):ctx.moveTo(x(i),y(v)); });
+    ctx.stroke();
+    ctx.fillStyle = ctx.strokeStyle;
+    ctx.beginPath(); ctx.arc(x(eqHist.length-1),y(end),4,0,7); ctx.fill();
+    ctx.fillStyle='#7d8895'; ctx.fillText('equity', x(eqHist.length-1)-44, y(end)-8);
+  }
+
+  function paint(){
+    const side = position>0?'LONG':position<0?'SHORT':'FLAT';
+    $('a-side').textContent = side==='FLAT' ? 'FLAT' : side+' '+Math.abs(position);
+    $('a-side').className = 'badge ' + (position>0?'long':position<0?'short':'flat');
+    $('a-cash').textContent = '$'+cash.toFixed(2);
+    const eq = equityNow();
+    const unreal = position!==0 ? position*(markPrice()-entry) : 0;
+    $('a-unreal').textContent = (unreal>0?'+':unreal<0?'-':'')+'$'+Math.abs(unreal).toFixed(2);
+    $('a-unreal').className = unreal>0?'up3':unreal<0?'down3':'';
+    $('a-equity').textContent = '$'+eq.toFixed(2);
+    $('a-equity').className = 'eqbig ' + (eq>START?'up3':eq<START?'down3':'');
+    if(position!==0){
+      $('a-formula').innerHTML =
+        `equity = ${cash.toFixed(2)} + (${position}) × ${markPrice().toFixed(2)} = <b>${eq.toFixed(2)}</b>`;
+    } else {
+      $('a-formula').innerHTML = `flat → equity = cash = <b>${eq.toFixed(2)}</b>`;
+    }
+  }
+
+  $('go-long').onclick=()=>open(1);
+  $('go-short').onclick=()=>open(-1);
+  $('step').onclick=()=>step();
+  $('close').onclick=close;
+  $('reset').onclick=reset;
+  $('run').onclick=()=>{
+    if(position===0) return;
+    if(raf){cancelAnimationFrame(raf);raf=null;return;}
+    const loop=()=>{ if(step()) raf=requestAnimationFrame(loop); else raf=null; };
+    loop();
+  };
+  reset();
+})();
+</script>
+
+</body>
+</html>

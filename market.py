@@ -4,10 +4,11 @@ market.py — the cumulative artifact for TRACK 1 (normal trading).
 You build this ONE LINE AT A TIME, one line per lesson, until it is a real
 backtester: a price feed -> a strategy -> a portfolio -> P&L -> metrics.
 
-Right now it is at the LESSON 3 stage: the "true" price (the MID) wanders, and
+Right now it is at the LESSON 4 stage: the "true" price (the MID) wanders, and
 around it capital.com quotes a BUY and a SELL price whose gap is the SPREAD. On
 day 0 you open a signed POSITION — long (+) profits if it rises, short (-) if it
-falls — and you pay the spread to get in and out either way.
+falls. Each day we mark it to market and report your EQUITY (cash + position
+value), the honest scoreboard that already counts the spread you'd pay to exit.
 
 This mimics a capital.com DEMO account (see course/capital_com.md): two-sided
 prices, long & short, leverage, the spread, real order types, and the costs.
@@ -17,8 +18,8 @@ BUILD MAP  (each lesson unlocks ~1 new line in the loop below)
 ------------------------------------------------------------------------------
   L1  price wanders          mid += shock
   L2  two prices, a spread   buy, sell = mid + s/2, mid - s/2
-  L3  long AND short         position += qty   (qty can be negative)  <-- HERE
-  L4  what are you worth      equity = cash + position * price
+  L3  long AND short         position += qty   (qty can be negative)
+  L4  what are you worth      equity = cash + position * price          <-- HERE
   L5  leverage & margin      margin = abs(position)*price / leverage
   L6  order types            trigger limit / stop / take-profit
   L7  size your bets         qty = risk_frac * equity / stop_distance
@@ -43,6 +44,8 @@ history = [mid]        # we remember every day's mid so we can look back
 buy = sell = mid       # today's two prices (filled in each day below)
 position = 0           # signed bet: +long, -short, 0 flat (L3)
 entry = 0.0            # the price we opened that position at
+cash = 2000.0          # settled balance; only moves when we trade (L4)
+equity = cash          # balance + live value of the open position (L4)
 
 for day in range(DAYS):
     # ---- THE MARKET'S ONE RULE (Lesson 1) -----------------------------------
@@ -64,6 +67,12 @@ for day in range(DAYS):
     if day == 0:
         position += 10            # <-- go long 10 units (try -10 for a short)
         entry = buy if position > 0 else sell
+        cash -= position * entry  # buying spends cash; shorting brings it in
+    # ---- WHAT ARE YOU WORTH? P&L & EQUITY (Lesson 4) ------------------------
+    # Mark the position at the price you could CLOSE it for (a long -> sell, a
+    # short -> buy), then your net worth is cash plus that live value.
+    mark = sell if position > 0 else buy if position < 0 else mid
+    equity = cash + position * mark
     # -------------------------------------------------------------------------
     history.append(mid)
 
@@ -91,14 +100,17 @@ print(f"\nToday's quote:  SELL ${sell:.2f}  |  mid ${mid:.2f}  |  BUY ${buy:.2f}
 print(f"Spread = ${SPREAD:.2f}. Buy now and sell instantly and you're already "
       f"down ${SPREAD:.2f} — that's the broker's fee.")
 
-# ---- YOUR OPEN POSITION (Lesson 3) ------------------------------------------
-# A long closes at the SELL; a short closes at the BUY. P&L is the signed
-# position times how far the close price has moved from your entry.
+# ---- YOUR OPEN POSITION & ACCOUNT (Lessons 3-4) -----------------------------
+# A long closes at the SELL; a short closes at the BUY. Unrealized P&L is the
+# signed position times how far that close price has moved from your entry, and
+# it's exactly the gap between your starting cash-equivalent and your equity.
 side = "LONG" if position > 0 else "SHORT" if position < 0 else "FLAT"
 close = sell if position > 0 else buy
 pnl = position * (close - entry)
 print(f"Position: {side} {abs(position)} from ${entry:.2f} -> close at "
-      f"${close:.2f}  =>  P&L ${pnl:+.2f}")
+      f"${close:.2f}  =>  unrealized P&L ${pnl:+.2f}")
+print(f"Account:  balance ${cash:.2f}  +  position {position} x ${close:.2f}  "
+      f"=  equity ${equity:.2f}")
 
 
 # -----------------------------------------------------------------------------
@@ -113,3 +125,5 @@ print(f"Position: {side} {abs(position)} from ${entry:.2f} -> close at "
 #    round-trips at SPREAD = 0.10 would cost you $1?
 # 5. Flip the day-0 trade to a SHORT: change `position += 10` to `-= 10`. With
 #    this falling market (seed 7), does the short now make money? (Yes.)
+# 6. Print equity each day inside the loop. Watch it breathe while `cash` sits
+#    frozen — that gap IS your unrealized P&L, paper until you close.
