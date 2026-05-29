@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>L3 · Long &amp; short — Learn to Trade</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .wkrow{display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap}
+  .wkrow canvas{flex:1.4;min-width:320px}
+  .ctrls{flex:1;min-width:260px}
+  .dirpick{display:flex;gap:10px;margin-bottom:10px}
+  .dirpick button{flex:1}
+  .hud{font-family:ui-monospace,monospace;line-height:1.95;margin:8px 0}
+  .hud b{color:var(--ink)}
+  .pnl{font-size:30px;font-weight:800;font-family:ui-monospace,monospace}
+  .up3{color:var(--up2);font-weight:700} .down3{color:var(--down2);font-weight:700}
+  .badge{display:inline-block;font-size:12px;font-weight:700;padding:2px 9px;border-radius:999px;
+    letter-spacing:.04em}
+  .badge.long{background:var(--up);color:#03130d} .badge.short{background:var(--down);color:#1b0405}
+  .badge.flat{background:var(--panel2);color:var(--dim);border:1px solid var(--line)}
+  .mirror{color:var(--dim);font-size:13px;font-family:ui-monospace,monospace;margin-top:4px}
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <a href="index.html" class="brand">📈 Learn to Trade</a>
+  <div class="lesson-pills">
+    <a href="index.html">Index</a>
+    <a class="t1" href="lesson_01.html">L1</a>
+    <a class="t1" href="lesson_02.html">L2</a>
+    <a class="t1 current" href="lesson_03.html">L3</a>
+    <a class="t1" href="index.html#l4">L4</a>
+    <a class="t1" href="index.html#track1">T1</a>
+    <a class="t2" href="index.html#track2">T2</a>
+  </div>
+</nav>
+
+<div class="wrap">
+
+<h1>Lesson 3 · Your first trade — long &amp; short</h1>
+<p class="subtitle">A price isn't something you just watch — it's something you bet on. On capital.com
+that bet is a <strong>CFD</strong>, and the first thing it needs is a <em>direction</em>. Go
+<span style="color:var(--up2);font-weight:700">long</span> and you win when the price rises; go
+<span style="color:var(--down2);font-weight:700">short</span> and you win when it <em>falls</em>.</p>
+
+<div class="demo">
+  <h3>🎯 Open a trade, then step the market</h3>
+  <p class="subtitle" style="margin:4px 0 12px">Pick a side. You open at the bad side of the spread
+  (long buys high, short sells low), and we mark your bet to market each day. The dashed gold line is
+  <b style="color:var(--accent)">break-even</b> — a full spread away from your entry, because you'll
+  pay the toll again to close.</p>
+  <div class="wkrow">
+    <canvas id="chart" width="900" height="240"></canvas>
+    <div class="ctrls">
+      <div class="dirpick">
+        <button class="up" id="go-long">▲ Go LONG</button>
+        <button class="down" id="go-short">▼ Go SHORT</button>
+      </div>
+      <div class="hud" id="hud">
+        position <span class="badge flat" id="b-side">FLAT</span><br>
+        <span id="detail" style="color:var(--dim)">Pick a side to open 10 units at mid $100.00.</span>
+      </div>
+      <div class="pnl" id="pnl">—</div>
+      <div class="mirror" id="mirror"></div>
+      <div class="btnrow">
+        <button id="step">▶ Next day</button>
+        <button id="run">⏩ Run 10</button>
+        <button id="reset">↻ New market</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="callout info">
+  🔁 <strong>One formula, both directions:</strong>
+  <code>P&amp;L = position × (exit − entry)</code>. Long is <code>position = +10</code>, short is
+  <code>−10</code>. When the price drops, the bracket goes negative — and negative × negative is a
+  <em>profit</em> for the short. Watch the grey "other side" line: it's your P&amp;L mirrored.
+</div>
+
+<div class="callout warn">
+  <strong>Shorts cut both ways.</strong> A long can only fall to zero, but a price can rise forever —
+  so a short's loss is, in theory, <em>unlimited</em>. And notice both sides open a little red: that's
+  the Lesson 2 spread, paid on the way in and again on the way out. Direction picks which way you need
+  the market to move; the spread is the toll either way.
+</div>
+
+<div class="recap">
+  <div class="r-title">✅ You can now say…</div>
+  <ul>
+    <li><strong>Long</strong> = buy first, profit if it rises. <strong>Short</strong> = sell first, profit if it falls.</li>
+    <li>A whole trade is one signed number: <code>position</code> (+long, −short, 0 flat).</li>
+    <li>You open and close on the <em>bad</em> side of the spread, so a round trip always costs a full spread.</li>
+    <li>The one line you added to <code>market.py</code>: <code>position += 10</code> (or <code>−= 10</code> to short).</li>
+  </ul>
+</div>
+
+<p style="margin-top:24px">
+  <a href="lesson_02.html">← L2: Bid, ask &amp; the spread</a> &nbsp;·&nbsp;
+  <a href="index.html#l4"><strong>L4: P&amp;L &amp; equity — what are you worth? →</strong></a>
+</p>
+
+</div>
+
+<footer class="site">
+  Built by <a href="https://github.com/fernfant">@fernfant</a> ·
+  <a href="https://github.com/fernfant/learn-trading">source on GitHub</a> · MIT licensed
+</footer>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const SPREAD = 0.10, QTY = 10, ENTRY_MID = 100;
+  function gauss(){ let u=0,v=0; while(!u)u=Math.random(); while(!v)v=Math.random();
+    return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+
+  const cv = $('chart'), ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height, PAD = 30, MAXD = 12;
+  let dir, mid, entryPrice, hist, day, raf=null;
+
+  function reset(){
+    if(raf){cancelAnimationFrame(raf);raf=null;}
+    dir=0; mid=ENTRY_MID; entryPrice=0; hist=[ENTRY_MID]; day=0;
+    draw(); paint();
+  }
+  function open(d){
+    if(raf){cancelAnimationFrame(raf);raf=null;}
+    dir=d; mid=ENTRY_MID; hist=[ENTRY_MID]; day=0;
+    entryPrice = d>0 ? mid+SPREAD/2 : mid-SPREAD/2;   // cross to the bad side
+    draw(); paint();
+  }
+  // mark-to-market exit: long closes at the sell, short at the buy
+  function exitPrice2(d, m){ return d>0 ? m-SPREAD/2 : m+SPREAD/2; }
+  function breakevenMid(){ return dir>0 ? ENTRY_MID+SPREAD : ENTRY_MID-SPREAD; }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    const all = hist.concat(dir? [breakevenMid(), ENTRY_MID] : []);
+    let lo=Math.min(...all), hi=Math.max(...all);
+    if(hi-lo < 1){ const c=(hi+lo)/2; lo=c-1; hi=c+1; }
+    const pad=(hi-lo)*0.15; lo-=pad; hi+=pad;
+    const x = i => PAD + i*(W-2*PAD)/MAXD;
+    const y = p => PAD + (1-(p-lo)/(hi-lo))*(H-2*PAD);
+    // entry line
+    if(dir){
+      ctx.strokeStyle='#5a636e'; ctx.setLineDash([4,4]); ctx.lineWidth=1;
+      ctx.beginPath(); ctx.moveTo(PAD,y(ENTRY_MID)); ctx.lineTo(W-PAD,y(ENTRY_MID)); ctx.stroke();
+      ctx.fillStyle='#7d8895'; ctx.font='11px ui-monospace,monospace'; ctx.textAlign='left';
+      ctx.fillText('entry mid $'+ENTRY_MID.toFixed(2), PAD+2, y(ENTRY_MID)-4);
+      // break-even line
+      ctx.strokeStyle='#f0b429'; ctx.beginPath();
+      ctx.moveTo(PAD,y(breakevenMid())); ctx.lineTo(W-PAD,y(breakevenMid())); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle='#f0b429';
+      ctx.fillText('break-even $'+breakevenMid().toFixed(2), PAD+2, y(breakevenMid())+14);
+    } else { ctx.setLineDash([]); }
+    // mid path
+    const end=hist[hist.length-1];
+    const pl = dir? dir*(exitPrice2(dir,end)-entryPrice) : 0;
+    ctx.strokeStyle = !dir ? '#9aa7b4' : pl>=0 ? '#34d399' : '#f87171';
+    ctx.lineWidth=2; ctx.beginPath();
+    hist.forEach((p,i)=>{ i?ctx.lineTo(x(i),y(p)):ctx.moveTo(x(i),y(p)); });
+    ctx.stroke();
+    ctx.fillStyle = ctx.strokeStyle;
+    ctx.beginPath(); ctx.arc(x(hist.length-1),y(end),4,0,7); ctx.fill();
+  }
+
+  function paint(){
+    const side = dir>0?'LONG':dir<0?'SHORT':'FLAT';
+    $('b-side').textContent = side;
+    $('b-side').className = 'badge ' + (dir>0?'long':dir<0?'short':'flat');
+    if(!dir){
+      $('detail').textContent = 'Pick a side to open 10 units at mid $100.00.';
+      $('pnl').textContent='—'; $('pnl').className='pnl'; $('mirror').textContent='';
+      return;
+    }
+    const m=hist[hist.length-1];
+    const xp=exitPrice2(dir,m);
+    const pl=QTY*dir*(xp-entryPrice);
+    const mirEntry=dir>0?ENTRY_MID-SPREAD/2:ENTRY_MID+SPREAD/2;
+    const mir=QTY*(-dir)*(exitPrice2(-dir,m)-mirEntry);
+    $('detail').innerHTML =
+      `${side} <b>${QTY}</b> · entry <b>$${entryPrice.toFixed(2)}</b> · day <b>${day}</b><br>`+
+      `mid <b>$${m.toFixed(2)}</b> → close at <b>$${xp.toFixed(2)}</b>`;
+    $('pnl').textContent = (pl>=0?'+':'')+pl.toFixed(2);
+    $('pnl').className = 'pnl ' + (pl>=0?'up3':'down3');
+    $('mirror').textContent = `if you'd gone ${dir>0?'SHORT':'LONG'} instead: `
+      + (mir>=0?'+':'')+mir.toFixed(2);
+  }
+
+  function step(){
+    if(!dir || day>=MAXD) return false;
+    mid += gauss(); hist.push(mid); day++; draw(); paint(); return true;
+  }
+  $('go-long').onclick=()=>open(1);
+  $('go-short').onclick=()=>open(-1);
+  $('step').onclick=()=>step();
+  $('reset').onclick=reset;
+  $('run').onclick=()=>{
+    if(!dir) return;
+    if(raf){cancelAnimationFrame(raf);raf=null;return;}
+    const loop=()=>{ if(step()) raf=requestAnimationFrame(loop); else raf=null; };
+    loop();
+  };
+  reset();
+})();
+</script>
+
+</body>
+</html>
