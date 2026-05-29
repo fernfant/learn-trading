@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Learn to Trade — interactive course</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<nav class="topbar">
+  <a href="index.html" class="brand">📈 Learn to Trade</a>
+  <div class="lesson-pills">
+    <a href="index.html" class="current">Index</a>
+    <a class="t1" href="#track1">T1</a>
+    <a class="t1" href="#l1">L1</a>
+    <a class="t1" href="#l2">L2</a>
+    <a class="t1" href="#l3">L3</a>
+    <a class="t1" href="#l5">L5</a>
+    <a class="t1" href="#l6">L6</a>
+    <a class="t1" href="#l9">L9</a>
+    <a class="t1" href="#l11">L11🏆</a>
+    <a class="t2" href="#track2">T2</a>
+    <a class="t2" href="#l13">L13</a>
+    <a class="t2" href="#l18">L18</a>
+    <a class="t2" href="#l21">L21</a>
+    <a class="t2" href="#l22">L22🏆</a>
+  </div>
+</nav>
+
+<div class="wrap">
+
+<h1>Learn to Trade — from "what's a price?" to high-frequency trading</h1>
+<p class="subtitle">Two tracks, evenly split. You learn by <strong>building</strong>: grow one
+program per track, one line per lesson, until they're the real thing.</p>
+
+<div class="mission">
+  <h2>🎯 Your mission</h2>
+  <p>A stock price isn't a fact — it's a number that <em>wanders</em>, and nobody knows which way it
+  goes next. <strong>Track 1</strong> teaches you to trade against it on a simulator that behaves
+  like a <a href="https://capital.com">capital.com</a> demo account: two prices, long &amp; short,
+  leverage, the spread, real orders, and the costs that quietly decide who wins.</p>
+  <p><strong>Track 2</strong> flips the table: you build the <em>exchange</em> and a market-making bot
+  that <em>earns</em> the spread you paid in Track 1 — the very role capital.com plays for its users.
+  That's high-frequency trading, from the inside.</p>
+  <a href="#track1" class="go">▶ Start the mission — Track 1, Lesson 1</a>
+</div>
+
+<div class="callout info">
+  <strong>Practise on the free demo.</strong> Everything here is built for capital.com's
+  risk-free <strong>demo account</strong> (virtual money, real prices). See the
+  <a href="https://github.com/fernfant/learn-trading/blob/main/course/capital_com.md">platform mechanics</a>
+  we mimic.
+</div>
+
+<!-- interactive: beat the coin -->
+<div class="demo">
+  <h3>🪙 First, feel the problem: can you beat a coin?</h3>
+  <p class="subtitle" style="margin:4px 0 10px">This is a random walk — the simplest honest model of a
+  market. Watch one tick, then predict the <b>next</b>. Tally how often you're right. (Spoiler: about half.)</p>
+  <canvas id="walk" width="860" height="200"></canvas>
+  <div class="btnrow">
+    <button class="up" id="up">▲ Next tick is UP</button>
+    <button class="down" id="down">▼ Next tick is DOWN</button>
+    <button id="reset">↻ Reset</button>
+    <span class="tally" id="tally">right <b>0</b> / 0 &nbsp;=&nbsp; <b>—</b></span>
+  </div>
+  <p class="subtitle" style="margin:6px 0 0">Hovering near 50%? That's the whole, hard game. Real markets
+  aren't <em>perfectly</em> random — but the edges are small, and telling a real edge from a lucky streak
+  is what this course is about.</p>
+</div>
+
+<!-- the hinge -->
+<h2>🔁 The big idea: the spread, from both seats</h2>
+<p class="subtitle" style="margin-top:0">The same number ties the two tracks together. As a customer you
+<strong>pay</strong> the spread; as a market maker you <strong>earn</strong> it.</p>
+<div class="map">
+  <div class="row">
+    <div class="cell t1">
+      <span class="tag">Track 1 · you are the customer</span>
+      <h4>You cross the spread</h4>
+      <p>Buy a hair high, sell a hair low. That gap is your cost on every trade — capital.com's fee.</p>
+    </div>
+    <div class="hinge">the&nbsp;SPREAD<br>cost&nbsp;⇄&nbsp;revenue</div>
+    <div class="cell t2">
+      <span class="tag">Track 2 · you are the market maker</span>
+      <h4>You quote the spread</h4>
+      <p>Post both prices and earn the gap — while managing inventory, latency and toxic flow. That's HFT.</p>
+    </div>
+  </div>
+</div>
+
+<!-- TRACK 1 -->
+<div class="track-head" id="track1"><span class="dot g"></span> Track 1 · Trading on capital.com</div>
+<p class="subtitle" style="margin-top:0">Grows <code>market.py</code>. Ten lessons + a capstone, gentle ramp.</p>
+
+<div class="rm-group">
+  <h3>Part A · The price &amp; your first trade</h3>
+
+  <a class="rm-card t1" id="l1" href="https://github.com/fernfant/learn-trading/blob/main/course/01_walkthrough.md">
+    <span class="rm-num">L1</span>
+    <span><span class="rm-title">What is a price?</span>
+      <span class="rm-desc">A random walk you can't predict. <code>price += shock</code></span>
+      <span class="rm-ref">📖 <b>Malkiel</b>, A Random Walk Down Wall Street</span></span>
+    <span class="rm-meta"><span class="pill done">built</span><span class="diff"><span class="on">●</span>●●</span></span>
+  </a>
+
+  <div class="rm-card t1" id="l2">
+    <span class="rm-num">L2</span>
+    <span><span class="rm-title">Bid, ask &amp; the spread</span>
+      <span class="rm-desc">There are always two prices. <code>buy/sell around a mid</code></span>
+      <span class="rm-ref">📖 <b>BabyPips</b>, School of Pipsology · capital.com Pricing</span></span>
+    <span class="rm-meta"><span class="pill soon">soon</span><span class="diff"><span class="on">●</span>●●</span></span>
+  </div>
+
+  <div class="rm-card t1" id="l3">
+    <span class="rm-num">L3</span>
+    <span><span class="rm-title">Your first trade: long <b>and</b> short</span>
+      <span class="rm-desc">CFDs let you profit either way. <code>signed position</code></span>
+      <span class="rm-ref">📖 capital.com — CFD basics</span></span>
+    <span class="rm-meta"><span class="pill soon">soon</span><span class="diff"><span class="on">●</span>●●</span></span>
+  </div>
+
+  <div class="rm-card t1" id="l4">
+    <span class="rm-num">L4</span>
+    <span><span class="rm-title">P&amp;L &amp; equity</span>
+      <span class="rm-desc">What are you worth? <code>equity = cash + position*price</code></span>
+      <span class="rm-ref">📖 Investopedia — P&amp;L</span></span>
+    <span class="rm-meta"><span class="pill soon">soon</span><span class="diff"><span class="on">●</span>●●</span></span>
+  </div>
+</div>
+
+<div class="rm-group">
+  <h3>Part B · Leverage, orders &amp; risk</h3>
+
+  <div class="rm-card t1" id="l5">
+    <span class="rm-num">L5</span>
+    <span><span class="rm-title">Leverage &amp; margin</span>
+      <span class="rm-desc">The double-edged sword. Margin call &amp; 50% stop-out.</span>
+      <span class="rm-ref">📖 <b>BabyPips</b> — leverage &amp; margin</span></span>
+    <span class="rm-meta"><span class="pill soon">soon</span><span class="diff"><span class="on">●●</span>●</span></span>
+  </div>
+
+  <div class="rm-card t1" id="l6">
+    <span class="rm-num">L6</span>
+    <span><span class="rm-title">Order types</span>
+      <span class="rm-desc">Market, limit, stop, trailing, guaranteed stop, take-profit.</span>
+      <span class="rm-ref">📖 <b>Harris</b>, Trading &amp; Exchanges · capital.com order menu</span></span>
+    <span class="rm-meta"><span class="pill soon">soon</span><span class="diff"><span class="on">●●</span>●</span></span>
+  </div>
+
+  <div class="rm-card t1" id="l7">
+    <span class="rm-num">L7</span>
+    <span><span class="rm-title">Risk &amp; position sizing</span>
+      <span class="rm-desc">Don't blow up. How much to bet beats what to bet.</span>
+      <span class="rm-ref">📖 <b>Van Tharp</b>, Trade Your Way to Financial Freedom</span></span>
+    <span class="rm-meta"><span class="pill soon">soon</span><span class="diff"><span class="on">●●</span>●</span></span>
+  </div>
+</div>
+
+<div class="rm-group">
+  <h3>Part C · Strategy &amp; the honest test</h3>
+
+  <div class="rm-card t1" id="l8">
+    <span class="rm-num">L8</span>
+    <span><span class="rm-title">A signal: moving-average crossover</span>
+      <span class="rm-desc">Plus the skeptic's warning: most "signals" are noise.</span>
+      <span class="rm-ref">📖 <b>Murphy</b>, Technical Analysis · <b>Aronson</b>, Evidence-Based TA</span></span>
+    <span class="rm-meta"><span class="pill soon">soon</span><span class="diff"><span class="on">●●</span>●</span></span>
+  </div>
+
+  <div class="rm-card t1" id="l9">
+    <span class="rm-num">L9</span>
+    <span><span class="rm-title">Costs that kill</span>
+      <span class="rm-desc">Spread + overnight funding + slippage. Why most retail accounts lose.</span>
+      <span class="rm-ref">📖 capital.com — Pricing &amp; fees</span></span>
+    <span class="rm-meta"><span class="pill soon">soon</span><span class="diff"><span class="on">●●</span>●</span></span>
+  </div>
+
+  <div class="rm-card t1" id="l10">
+    <span class="rm-num">L10</span>
+    <span><span class="rm-title">Backtesting honestly</span>
+      <span class="rm-desc">Return, Sharpe, max drawdown, in- vs out-of-sample.</span>
+      <span class="rm-ref">📖 <b>Ernie Chan</b>, Quantitative Trading</span></span>
+    <span class="rm-meta"><span class="pill soon">soon</span><span class="diff"><span class="on">●●●</span></span></span>
+  </div>
+
+  <a class="rm-card t1 boss" id="l11" href="https://github.com/fernfant/learn-trading/blob/main/course/index.md">
+    <span class="rm-num">L11</span>
+    <span><span class="rm-title">🏆 Capstone — beat buy-and-hold, after costs</span>
+      <span class="rm-desc">Prove a strategy wins on the sim once the spread &amp; fees are paid.</span>
+      <span class="rm-ref">📖 Chan + Tharp</span></span>
+    <span class="rm-meta"><span class="pill cap">capstone</span><span class="diff"><span class="on">●●●</span></span></span>
+  </a>
+</div>
+
+<div class="recap">
+  <div class="r-title">✅ After Track 1 you can say…</div>
+  <ul>
+    <li>"A price is a near-random walk; predicting it beats a coin only by a hair."</li>
+    <li>"I can go long or short with leverage, place real orders, size my risk — and I know the spread and fees are quietly working against me."</li>
+    <li>"A strategy isn't real until it survives an honest backtest <em>after costs</em>."</li>
+  </ul>
+</div>
+
+<!-- TRACK 2 -->
+<div class="track-head" id="track2"><span class="dot r"></span> Track 2 · Inside the exchange / HFT</div>
+<p class="subtitle" style="margin-top:0">Grows <code>exchange.py</code>. Ten lessons + a capstone, the deep tail.</p>
+
+<div class="rm-group">
+  <h3>Part D · Build the exchange</h3>
+
+  <div class="rm-card t2" id="l12">
+    <span class="rm-num">L12</span>
+    <span><span class="rm-title">From price-taker to price-maker</span>
+      <span class="rm-desc">The bridge: the spread flips from your cost to your revenue.</span>
+      <span class="rm-ref">📖 <b>Harris</b>, Trading &amp; Exchanges</span></span>
+    <span class="rm-meta"><span class="pill soon">soon</span><span class="diff"><span class="on">●●</span>●</span></span>
+  </div>
+
+  <a class="rm-card t2" id="l13" href="https://github.com/fernfant/learn-trading/blob/main/exchange.py">
+    <span class="rm-num">L13</span>
+    <span><span class="rm-title">The order book</span>
+      <span class="rm-desc">Bids, asks, depth, the spread. <code>OrderBook</code> (seed already runs)</span>
+      <span class="rm-ref">📖 <b>Harris</b></span></span>
+    <span class="rm-meta"><span class="pill done">seed</span><span class="diff"><span class="on">●●</span>●</span></span>
+  </a>
+
+  <div class="rm-card t2" id="l14">
+    <span class="rm-num">L14</span>
+    <span><span class="rm-title">A market order eats the book</span>
+      <span class="rm-desc">Walking the book — slippage, seen from the inside.</span>
+      <span class="rm-ref">📖 <b>Harris</b></span></span>
+    <span class="rm-meta"><span class="pill soon">soon</span><span class="diff"><span class="on">●●</span>●</span></span>
+  </div>
+
+  <div class="rm-card t2" id="l15">
+    <span class="rm-num">L15</span>
+    <span><span class="rm-title">A limit order rests</span>
+      <span class="rm-desc">Price-time priority — why your place in the queue matters.</span>
+      <span class="rm-ref">📖 <b>Harris</b></span></span>
+    <span class="rm-meta"><span class="pill soon">soon</span><span class="diff"><span class="on">●●●</span></span></span>
+  </div>
+
+  <div class="rm-card t2" id="l16">
+    <span class="rm-num">L16</span>
+    <span><span class="rm-title">The matching engine loop</span>
+      <span class="rm-desc">Crossed orders → trades. The heart of every exchange.</span>
+      <span class="rm-ref">📖 <b>Hasbrouck</b>, Empirical Market Microstructure</span></span>
+    <span class="rm-meta"><span class="pill soon">soon</span><span class="diff"><span class="on">●●●</span></span></span>
+  </div>
+
+  <div class="rm-card t2" id="l17">
+    <span class="rm-num">L17</span>
+    <span><span class="rm-title">Market data &amp; the tape</span>
+      <span class="rm-desc">Top-of-book, depth, trade tape — what an HFT actually sees.</span>
+      <span class="rm-ref">📖 <b>Hasbrouck</b></span></span>
+    <span class="rm-meta"><span class="pill soon">soon</span><span class="diff"><span class="on">●●●</span></span></span>
+  </div>
+</div>
+
+<div class="rm-group">
+  <h3>Part E · Be the market maker</h3>
+
+  <div class="rm-card t2" id="l18">
+    <span class="rm-num">L18</span>
+    <span><span class="rm-title">A market maker</span>
+      <span class="rm-desc">Quote both sides, earn the spread — capital.com's business model.</span>
+      <span class="rm-ref">📖 <b>Cartea, Jaimungal &amp; Penalva</b></span></span>
+    <span class="rm-meta"><span class="pill soon">soon</span><span class="diff"><span class="on">●●●</span></span></span>
+  </div>
+
+  <div class="rm-card t2" id="l19">
+    <span class="rm-num">L19</span>
+    <span><span class="rm-title">Inventory risk — skew your quotes</span>
+      <span class="rm-desc">Hold too much? Lean your prices to get flat. Avellaneda–Stoikov.</span>
+      <span class="rm-ref">📖 Avellaneda &amp; Stoikov (2008)</span></span>
+    <span class="rm-meta"><span class="pill soon">soon</span><span class="diff"><span class="on">●●●</span></span></span>
+  </div>
+
+  <div class="rm-card t2" id="l20">
+    <span class="rm-num">L20</span>
+    <span><span class="rm-title">Latency &amp; the queue</span>
+      <span class="rm-desc">Why being one microsecond faster pays. Co-location, speed races.</span>
+      <span class="rm-ref">📖 <b>Michael Lewis</b>, Flash Boys</span></span>
+    <span class="rm-meta"><span class="pill soon">soon</span><span class="diff"><span class="on">●●●</span></span></span>
+  </div>
+
+  <div class="rm-card t2" id="l21">
+    <span class="rm-num">L21</span>
+    <span><span class="rm-title">Adverse selection</span>
+      <span class="rm-desc">Informed/toxic flow runs you over. Glosten–Milgrom, Kyle.</span>
+      <span class="rm-ref">📖 <b>O'Hara</b>, Market Microstructure Theory</span></span>
+    <span class="rm-meta"><span class="pill soon">soon</span><span class="diff"><span class="on">●●●</span></span></span>
+  </div>
+
+  <a class="rm-card t2 boss" id="l22" href="https://github.com/fernfant/learn-trading/blob/main/course/index.md">
+    <span class="rm-num">L22</span>
+    <span><span class="rm-title">🏆 Capstone — a profitable, flat market maker</span>
+      <span class="rm-desc">Earn the spread against a flow simulator while staying near-zero inventory.</span>
+      <span class="rm-ref">📖 Cartea et al.</span></span>
+    <span class="rm-meta"><span class="pill cap">capstone</span><span class="diff"><span class="on">●●●</span></span></span>
+  </a>
+</div>
+
+<div class="recap">
+  <div class="r-title">✅ After Track 2 you can say…</div>
+  <ul>
+    <li>"A price is just the top of an order book; the spread is what the market maker charges for liquidity."</li>
+    <li>"I can quote both sides, manage inventory, and reason about latency and adverse selection — the core of HFT."</li>
+  </ul>
+</div>
+
+<h2>🛠 Companion material</h2>
+<ul>
+  <li>📦 Runnable code &amp; walkthroughs: <a href="https://github.com/fernfant/learn-trading/tree/main/course">course/</a> on GitHub</li>
+  <li>🗺 Full lesson↔book↔platform map: <a href="https://github.com/fernfant/learn-trading/blob/main/course/index.md">course/index.md</a></li>
+  <li>📘 How capital.com works (what we mimic): <a href="https://github.com/fernfant/learn-trading/blob/main/course/capital_com.md">course/capital_com.md</a></li>
+</ul>
+
+<div class="callout warn">
+  <strong>Reality check.</strong> CFDs are leveraged and high-risk — the broker's own warning notes that
+  most retail accounts lose money. This course leans into that honestly: counting costs and managing risk
+  is the point. Start on the <strong>demo</strong>; real money and account eligibility are a parent's call.
+</div>
+
+</div>
+
+<footer class="site">
+  Built by <a href="https://github.com/fernfant">@fernfant</a> ·
+  <a href="https://github.com/fernfant/learn-trading">source on GitHub</a> · MIT licensed
+</footer>
+
+<script>
+(() => {
+  const cv = document.getElementById('walk'), ctx = cv.getContext('2d');
+  let prices, pending, right, total;
+  function reset(){
+    prices = [100]; for(let i=0;i<40;i++) prices.push(prices[i] + (Math.random()*2-1)*1.2);
+    pending = null; right = 0; total = 0; draw(); tally();
+  }
+  function draw(flash){
+    const W = cv.width, H = cv.height, p = 14;
+    ctx.clearRect(0,0,W,H);
+    const lo = Math.min(...prices), hi = Math.max(...prices), span = (hi-lo)||1;
+    const x = i => p + i*(W-2*p)/(prices.length-1);
+    const y = v => H-p - (v-lo)*(H-2*p)/span;
+    // line
+    ctx.beginPath(); ctx.lineWidth = 2;
+    ctx.strokeStyle = flash==='up' ? '#34d399' : flash==='down' ? '#f87171' : '#58a6ff';
+    prices.forEach((v,i)=>{ i?ctx.lineTo(x(i),y(v)):ctx.moveTo(x(i),y(v)); });
+    ctx.stroke();
+    // last dot
+    const li = prices.length-1;
+    ctx.fillStyle = ctx.strokeStyle; ctx.beginPath(); ctx.arc(x(li),y(prices[li]),3.5,0,7); ctx.fill();
+  }
+  function tally(){
+    const t = document.getElementById('tally');
+    const pct = total ? (100*right/total).toFixed(0)+'%' : '—';
+    t.innerHTML = `right <b>${right}</b> / ${total} &nbsp;=&nbsp; <b>${pct}</b>`;
+  }
+  function guess(dir){
+    const prev = prices[prices.length-1];
+    const next = prev + (Math.random()*2-1)*1.2;
+    prices.push(next); if(prices.length>60) prices.shift();
+    const wentUp = next >= prev;
+    total++; if((dir==='up')===wentUp) right++;
+    draw(wentUp?'up':'down'); tally();
+  }
+  document.getElementById('up').onclick = ()=>guess('up');
+  document.getElementById('down').onclick = ()=>guess('down');
+  document.getElementById('reset').onclick = reset;
+  reset();
+})();
+</script>
+
+</body>
+</html>

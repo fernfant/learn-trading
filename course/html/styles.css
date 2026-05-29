@@ -1,0 +1,117 @@
+:root{
+  --bg:#0d1117; --panel:#161b22; --panel2:#1c232d; --ink:#e6edf3;
+  --dim:#9aa7b4; --line:#2b333d; --code-bg:#0b0f14;
+  --up:#26a17b; --up2:#34d399; --down:#e5484d; --down2:#f87171;
+  --accent:#f0b429; --t1:#26a17b; --t2:#e5484d; --link:#58a6ff;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;background:var(--bg);color:var(--ink);
+  font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+a{color:var(--link);text-decoration:none}
+a:hover{text-decoration:underline}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--code-bg);
+  padding:1px 6px;border-radius:5px;font-size:.88em;color:#d7e3ee}
+
+/* top bar */
+.topbar{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:14px;
+  background:rgba(13,17,23,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);
+  padding:10px 18px;flex-wrap:wrap}
+.brand{font-weight:800;color:var(--ink);font-size:17px;white-space:nowrap}
+.lesson-pills{display:flex;gap:5px;flex-wrap:wrap}
+.lesson-pills a{font-size:12.5px;padding:3px 9px;border-radius:999px;background:var(--panel2);
+  color:var(--dim);border:1px solid var(--line)}
+.lesson-pills a:hover{color:var(--ink);text-decoration:none}
+.lesson-pills a.current{background:var(--accent);color:#1a1300;border-color:var(--accent);font-weight:700}
+.lesson-pills a.t1{border-color:#1f5e4a}
+.lesson-pills a.t2{border-color:#6e2b2e}
+
+.wrap{max-width:920px;margin:0 auto;padding:28px 20px 80px}
+h1{font-size:34px;line-height:1.15;margin:18px 0 6px}
+h2{font-size:24px;margin:42px 0 4px}
+h3{font-size:18px;margin:0 0 12px}
+.subtitle{color:var(--dim);margin:0 0 18px}
+
+/* hero */
+.mission{background:linear-gradient(135deg,#13241d,#241516);border:1px solid var(--line);
+  border-radius:16px;padding:24px 26px;margin:18px 0}
+.mission h2{margin:0 0 10px;font-size:20px}
+.mission p{margin:0 0 12px}
+.go{display:inline-block;margin-top:6px;background:var(--accent);color:#1a1300;font-weight:700;
+  padding:11px 20px;border-radius:10px}
+.go:hover{filter:brightness(1.08);text-decoration:none}
+
+/* callout */
+.callout{border-radius:12px;padding:14px 18px;margin:18px 0;border:1px solid var(--line);background:var(--panel)}
+.callout.warn{border-color:#6e2b2e;background:#23151622}
+.callout.info{border-color:#1f5e4a;background:#13241d44}
+
+/* interactive demo */
+.demo{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px 24px;margin:18px 0}
+.demo h3{margin:0 0 6px}
+canvas{display:block;width:100%;height:200px;background:var(--code-bg);border-radius:10px;border:1px solid var(--line)}
+.btnrow{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0 8px;align-items:center}
+button{font:inherit;font-weight:600;cursor:pointer;border-radius:9px;padding:9px 16px;border:1px solid var(--line);
+  background:var(--panel2);color:var(--ink)}
+button.up{background:var(--up);border-color:var(--up);color:#03130d}
+button.down{background:var(--down);border-color:var(--down);color:#1b0405}
+button:hover{filter:brightness(1.1)}
+.tally{font-family:ui-monospace,monospace;color:var(--dim)}
+.tally b{color:var(--ink)}
+
+/* concept map (the spread hinge) */
+.map{display:grid;grid-template-columns:1fr;gap:10px;margin:14px 0}
+.map .row{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:stretch}
+.cell{border:1px solid var(--line);border-radius:12px;padding:14px 16px;background:var(--panel)}
+.cell.t1{border-color:#1f5e4a;background:#13241d33}
+.cell.t2{border-color:#6e2b2e;background:#23151633}
+.cell .tag{font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.cell.t1 .tag{color:var(--up2)}
+.cell.t2 .tag{color:var(--down2)}
+.cell h4{margin:6px 0 4px;font-size:16px}
+.cell p{margin:0;color:var(--dim);font-size:14px}
+.hinge{display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;
+  text-align:center;color:var(--accent);border:1px dashed var(--accent);border-radius:12px;padding:10px;background:#1a130011}
+
+/* roadmap */
+.track-head{display:flex;align-items:center;gap:10px;margin:38px 0 4px;font-size:22px;font-weight:800}
+.track-head .dot{width:12px;height:12px;border-radius:50%}
+.track-head .dot.g{background:var(--up)}
+.track-head .dot.r{background:var(--down)}
+.rm-group{margin:18px 0}
+.rm-group h3{color:var(--dim);font-size:14px;text-transform:uppercase;letter-spacing:.05em;margin:18px 0 10px}
+.rm-card{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;
+  border:1px solid var(--line);border-radius:12px;padding:13px 16px;margin:8px 0;background:var(--panel)}
+.rm-card:hover{border-color:#3a4350;text-decoration:none}
+.rm-card.t1{border-left:3px solid var(--up)}
+.rm-card.t2{border-left:3px solid var(--down)}
+.rm-card.boss{background:#1a130022;border-color:var(--accent)}
+.rm-num{font-family:ui-monospace,monospace;font-weight:700;color:var(--dim);min-width:34px;text-align:center}
+.rm-title{font-weight:700;color:var(--ink)}
+.rm-desc{color:var(--dim);font-size:14px;display:block;margin-top:2px}
+.rm-ref{color:#7d8895;font-size:12.5px;display:block;margin-top:3px}
+.rm-ref b{color:#9fb0c0;font-weight:600}
+.rm-meta{display:flex;flex-direction:column;align-items:flex-end;gap:5px}
+.pill{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.pill.done{background:var(--up);color:#03130d}
+.pill.soon{background:var(--panel2);color:var(--dim);border:1px solid var(--line)}
+.pill.cap{background:var(--accent);color:#1a1300}
+.diff{font-size:11px;color:#5a636e;font-family:ui-monospace,monospace}
+.diff .on{color:var(--accent)}
+
+.recap{background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--accent);
+  border-radius:10px;padding:14px 18px;margin:14px 0}
+.recap .r-title{font-weight:700;margin-bottom:6px}
+.recap ul{margin:0;padding-left:20px;color:var(--dim)}
+.recap li{margin:4px 0}
+
+footer.site{border-top:1px solid var(--line);margin-top:50px;padding:22px 20px;text-align:center;color:var(--dim);font-size:14px}
+
+@media(max-width:640px){
+  .map .row{grid-template-columns:1fr}
+  .rm-card{grid-template-columns:auto 1fr;}
+  .rm-meta{grid-column:2;flex-direction:row;justify-content:flex-start}
+  h1{font-size:27px}
+}
