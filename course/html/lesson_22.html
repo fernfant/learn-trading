@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>L22 · Capstone: profitable &amp; flat — Learn to Trade</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .wkrow{display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap}
+  .wkrow canvas{flex:1.6;min-width:320px}
+  .ctrls{flex:1;min-width:270px}
+  .ctrls h4{font-size:13px;color:var(--dim);text-transform:uppercase;letter-spacing:.05em;margin:14px 0 6px}
+  .sld{margin:0 0 10px}
+  .sld label{display:flex;justify-content:space-between;font-family:ui-monospace,monospace;font-size:13px;color:var(--dim)}
+  .sld label b{color:var(--ink)}
+  .sld input[type=range]{width:100%;accent-color:var(--down2)}
+  .gauge{margin:6px 0 2px}
+  .gaugebar{position:relative;height:22px;border-radius:6px;background:var(--code-bg);border:1px solid var(--line);overflow:hidden}
+  .gaugebar .zero{position:absolute;left:50%;top:0;bottom:0;width:1px;background:#5a636e}
+  .gaugebar .fill{position:absolute;top:0;bottom:0;background:var(--down2);opacity:.65}
+  .gaugebar .cap{position:absolute;top:0;bottom:0;width:2px;background:var(--accent)}
+  .gaugelab{display:flex;justify-content:space-between;font-family:ui-monospace,monospace;font-size:11px;color:#7d8895;margin-top:3px}
+  .stat{font-family:ui-monospace,monospace;line-height:1.7;font-size:13px;margin:8px 0 2px}
+  .stat .row{display:flex;justify-content:space-between;padding:2px 0;border-bottom:1px solid var(--line)}
+  .stat .row span:first-child{color:var(--dim)}
+  .stat .row b{color:var(--ink)}
+  .up3{color:var(--up2);font-weight:700} .down3{color:var(--down2);font-weight:700}
+  .verdict{font-family:ui-monospace,monospace;font-weight:700;font-size:14px;border-radius:10px;
+    padding:11px 14px;margin:12px 0 2px;border:1px solid var(--line);background:var(--panel2);line-height:1.45}
+  .verdict.good{border-color:#1f5e4a;background:#13241d55;color:var(--up2)}
+  .verdict.bad{border-color:#6e2b2e;background:#23151655;color:var(--down2)}
+  .verdict.meh{border-color:var(--accent);background:#1a130022;color:var(--accent)}
+  .verdict small{display:block;font-weight:400;color:var(--dim);margin-top:4px;font-size:12px}
+  .quoteline{font-family:ui-monospace,monospace;font-size:12px;color:var(--dim);margin-top:8px}
+  .quoteline b{color:var(--ink)}
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <a href="index.html" class="brand">📈 Learn to Trade</a>
+  <div class="lesson-pills">
+    <a href="index.html">Index</a>
+    <a class="t1" href="index.html#track1">T1</a>
+    <a class="t2" href="lesson_12.html">L12</a>
+    <a class="t2" href="lesson_13.html">L13</a>
+    <a class="t2" href="lesson_14.html">L14</a>
+    <a class="t2" href="lesson_15.html">L15</a>
+    <a class="t2" href="lesson_16.html">L16</a>
+    <a class="t2" href="lesson_17.html">L17</a>
+    <a class="t2" href="lesson_18.html">L18</a>
+    <a class="t2" href="lesson_19.html">L19</a>
+    <a class="t2" href="lesson_20.html">L20</a>
+    <a class="t2" href="lesson_21.html">L21</a>
+    <a class="t2 current" href="lesson_22.html">L22🏆</a>
+  </div>
+</nav>
+
+<div class="wrap">
+
+<h1>Lesson 22 · 🏆 Capstone — profitable <em>and</em> flat</h1>
+<p class="subtitle">The grand finale of Track 2. Combine everything: quote both sides to earn the
+spread (L18), <strong>skew by inventory</strong> to stay flat (L19), and survive a flow that hides
+<strong>toxic, informed</strong> traders (L21). A real market maker has a <em>dual</em> objective —
+end <strong style="color:var(--up2)">profitable</strong> (positive P&amp;L from captured spread)
+<em>and</em> <strong>flat</strong> (inventory near zero, not a giant directional bet). Either one alone
+is easy and worthless. Both at once is the job.</p>
+
+<div class="demo">
+  <h3>🛠️ The market-maker control room</h3>
+  <p class="subtitle" style="margin:4px 0 12px">Press <b>▶ Run session</b> and watch a live
+  <b style="color:var(--up2)">P&amp;L curve</b> build as 4,000 takers arrive. The
+  <b style="color:var(--down2)">inventory gauge</b> shows how flat you're staying. Widen your spread,
+  skew harder, or face more toxic flow — then read the <b style="color:var(--accent)">verdict</b>. Same seed
+  every run until you hit <b>New market</b>.</p>
+  <div class="wkrow">
+    <canvas id="chart" width="900" height="240"></canvas>
+    <div class="ctrls">
+      <h4>Your two levers</h4>
+      <div class="sld">
+        <label>half-spread <b id="hs-val">0.07</b></label>
+        <input type="range" id="hs" min="2" max="20" value="7">
+      </div>
+      <div class="sld">
+        <label>inventory skew <b id="sk-val">0.012</b></label>
+        <input type="range" id="sk" min="0" max="40" value="12">
+      </div>
+      <h4>The market</h4>
+      <div class="sld">
+        <label>informed / toxic flow <b id="inf-val">15%</b></label>
+        <input type="range" id="inf" min="0" max="50" value="15">
+      </div>
+
+      <h4 style="margin-top:16px">Inventory (flat = centre)</h4>
+      <div class="gauge">
+        <div class="gaugebar">
+          <div class="zero"></div>
+          <div class="cap" id="capL"></div>
+          <div class="cap" id="capR"></div>
+          <div class="fill" id="invfill"></div>
+        </div>
+        <div class="gaugelab"><span>-60</span><span id="invnow">0</span><span>+60</span></div>
+      </div>
+
+      <div class="stat">
+        <div class="row"><span>fills (toxic)</span><b id="s-fills">0 (0)</b></div>
+        <div class="row"><span>spread earned</span><b id="s-spread">+0.00</b></div>
+        <div class="row"><span>adverse loss</span><b id="s-adv">+0.00</b></div>
+        <div class="row"><span>inventory drift</span><b id="s-drift">+0.00</b></div>
+        <div class="row"><span>TOTAL P&amp;L</span><b id="s-pnl">+0.00</b></div>
+      </div>
+      <div class="quoteline" id="quoteline">at fair 100.00 you quote bid 99.93 / ask 100.07</div>
+
+      <div class="btnrow">
+        <button class="down" id="run">▶ Run session</button>
+        <button id="reseed">🎲 New market</button>
+      </div>
+    </div>
+  </div>
+  <div class="verdict meh" id="verdict">Press <b>Run session</b> to put your market maker to work.</div>
+</div>
+
+<div class="callout info">
+  💡 <strong>Read the decomposition, not just the headline.</strong> Total P&amp;L splits into three pieces
+  that sum exactly: <b>spread earned</b> (your edge), <b>adverse loss</b> (toxic ticks moving against your
+  inventory, L21), and <b>inventory drift</b> (fair's wander on whatever you're holding — pure risk). A maker
+  whose P&amp;L is mostly <em>drift</em> isn't making a market, it's gambling on leftover inventory.
+</div>
+
+<div class="callout warn">
+  <strong>The honest tension.</strong> Widen the spread and skew harder to survive adverse selection — but go
+  too far and your quotes sit so far from fair that <em>nobody hits you</em>: flat, safe, and earning nothing.
+  Quote too tight and toxic flow eats the thin spread. Push informed flow high enough and <em>no</em> setting
+  stays profitable — the flow is simply poison. There is no free money on this side of the book either.
+</div>
+
+<div class="recap">
+  <div class="r-title">✅ You can now say…</div>
+  <ul>
+    <li>A real market maker's objective is <strong>dual</strong>: end <strong>profitable</strong> (positive P&amp;L from captured spread) <em>and</em> <strong>flat</strong> (inventory near zero).</li>
+    <li>Either half alone is trivial and worthless — profit alone is a lucky directional bet; flat alone means you quoted so wide you never traded.</li>
+    <li>The <strong>skew</strong> (L19) keeps you flat without changing who trades — it changes your prices so the market hands your inventory back.</li>
+    <li>Total P&amp;L = <strong>spread earned</strong> + <strong>adverse-selection loss</strong> + <strong>inventory drift</strong>; the edge is the spread, eroded from both sides.</li>
+    <li>The edge is <strong>thin</strong> and it <strong>dies</strong> if toxic flow is too high or the spread too tight — no free money, the same honest lesson as Track 1.</li>
+  </ul>
+</div>
+
+<p style="margin-top:24px">
+  <a href="lesson_21.html">← L21: Adverse selection</a> &nbsp;·&nbsp;
+  <a href="index.html"><strong>🏆 Course complete — back to the index →</strong></a>
+</p>
+
+</div>
+
+<footer class="site">
+  Built by <a href="https://github.com/fernfant">@fernfant</a> ·
+  <a href="https://github.com/fernfant/learn-trading">source on GitHub</a> · MIT licensed
+</footer>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const STEPS = 4000, TICK = 0.06, NOISE = 0.02, CAP = 60;
+
+  // small seeded RNG (mulberry32) so a given "market" is reproducible and the
+  // sliders re-run the SAME flow until you reseed -- mirrors the Python seed.
+  function mulberry32(a){
+    return function(){
+      a |= 0; a = a + 0x6D2B79F5 | 0;
+      let t = Math.imul(a ^ a >>> 15, 1 | a);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+  function gauss(rng){ let u=0,v=0; while(!u)u=rng(); while(!v)v=rng();
+    return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+
+  const cv = $('chart'), ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height, PAD = 34;
+  let seed = 22, raf = null;
+  let halfSpread = 0.07, skew = 0.012, informedFrac = 0.15;
+
+  // run the whole session deterministically; returns the full result + curves
+  function simulate(){
+    const rng = mulberry32(seed);
+    let fair = 100.0, inv = 0, cash = 0.0;
+    let fills = 0, toxic = 0, spread = 0, adv = 0, drift = 0;
+    const pnlHist = [0], invHist = [0];
+    const hitProb = d => Math.max(0.05, Math.min(0.95, 0.55 - d*3.5));
+
+    for(let i=0;i<STEPS;i++){
+      const lean = skew * inv;
+      const bid = fair - halfSpread - lean, ask = fair + halfSpread - lean;
+      const informed = rng() < informedFrac;
+      const side = rng() < 0.5 ? "buy" : "sell";
+      const size = 1 + Math.floor(rng()*3);          // 1..3
+      const dist = side==="buy" ? (ask-fair) : (fair-bid);
+      if(rng() > hitProb(dist)){ pnlHist.push(cash+inv*fair); invHist.push(inv); continue; }
+
+      const fairBefore = fair;
+      if(side==="buy"){ cash += ask*size; inv -= size; spread += (ask-fairBefore)*size; }
+      else            { cash -= bid*size; inv += size; spread += (fairBefore-bid)*size; }
+      fills++;
+
+      if(informed){
+        toxic++;
+        const move = side==="buy" ? TICK : -TICK;     // fair jumps the taker's way
+        adv += inv * move;                            // against our NEW inventory
+        fair += move;
+      }
+      const wander = gauss(rng)*NOISE;
+      drift += inv * wander;
+      fair += wander;
+      pnlHist.push(cash+inv*fair); invHist.push(inv);
+    }
+    return {fair, inv, fills, toxic, spread, adv, drift,
+            pnl: cash+inv*fair, pnlHist, invHist};
+  }
+
+  function drawCurve(pnlHist, upto){
+    ctx.clearRect(0,0,W,H);
+    const n = pnlHist.length;
+    const shown = upto===undefined ? n : Math.max(2,Math.min(n,upto));
+    let lo=0, hi=0;
+    for(let i=0;i<n;i++){ lo=Math.min(lo,pnlHist[i]); hi=Math.max(hi,pnlHist[i]); }
+    if(hi-lo<1){ hi=lo+1; }
+    const pad=(hi-lo)*0.12; lo-=pad; hi+=pad;
+    const x = i => PAD + i*(W-2*PAD)/(n-1);
+    const y = v => PAD + (1-(v-lo)/(hi-lo))*(H-2*PAD);
+    // zero baseline
+    ctx.strokeStyle='#5a636e'; ctx.setLineDash([4,4]); ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(PAD,y(0)); ctx.lineTo(W-PAD,y(0)); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle='#7d8895'; ctx.font='11px ui-monospace,monospace'; ctx.textAlign='left';
+    ctx.fillText('break-even $0', PAD+2, y(0)-4);
+    // P&L curve up to `shown`
+    const end = pnlHist[shown-1];
+    ctx.strokeStyle = end>=0 ? '#34d399' : '#f87171'; ctx.lineWidth=2;
+    ctx.beginPath();
+    for(let i=0;i<shown;i++){ i?ctx.lineTo(x(i),y(pnlHist[i])):ctx.moveTo(x(i),y(pnlHist[i])); }
+    ctx.stroke();
+    ctx.fillStyle = ctx.strokeStyle;
+    ctx.beginPath(); ctx.arc(x(shown-1),y(end),4,0,7); ctx.fill();
+    ctx.fillText('P&L '+(end>=0?'+':'')+end.toFixed(0), x(shown-1)-52, y(end)-8);
+  }
+
+  function fmt(v){ return (v>=0?'+':'')+v.toFixed(2); }
+  function cls(v){ return v>0?'up3':v<0?'down3':''; }
+
+  function paintStats(r, invShown){
+    $('s-fills').textContent = r.fills+' ('+r.toxic+')';
+    $('s-spread').textContent = fmt(r.spread); $('s-spread').className = cls(r.spread);
+    $('s-adv').textContent = fmt(r.adv); $('s-adv').className = cls(r.adv);
+    $('s-drift').textContent = fmt(r.drift); $('s-drift').className = cls(r.drift);
+    $('s-pnl').textContent = fmt(r.pnl); $('s-pnl').className = cls(r.pnl);
+    // inventory gauge: map [-60,60] to [0,100]%
+    const iv = invShown===undefined ? r.inv : invShown;
+    const clamped = Math.max(-CAP, Math.min(CAP, iv));
+    const half = (Math.abs(clamped)/CAP)*50;
+    const f = $('invfill');
+    if(clamped>=0){ f.style.left='50%'; f.style.width=half+'%'; }
+    else { f.style.left=(50-half)+'%'; f.style.width=half+'%'; }
+    f.style.background = Math.abs(iv)<CAP ? 'var(--up2)' : 'var(--down2)';
+    $('invnow').textContent = (iv>=0?'+':'')+iv;
+  }
+
+  function setVerdict(r){
+    const v = $('verdict');
+    const profitable = r.pnl > 0, flat = Math.abs(r.inv) < CAP;
+    if(profitable && flat){
+      v.className='verdict good';
+      v.innerHTML = `✅ PROFITABLE &amp; FLAT — P&amp;L <b>${fmt(r.pnl)}</b>, inventory <b>${r.inv>=0?'+':''}${r.inv}</b>. `
+        + `This is real market making.<small>Your P&amp;L is captured spread (${fmt(r.spread)}) with inventory near flat — the same money tomorrow, with none of the risk.</small>`;
+    } else if(profitable && !flat){
+      v.className='verdict meh';
+      v.innerHTML = `⚠️ PROFITABLE but NOT FLAT — P&amp;L <b>${fmt(r.pnl)}</b>, inventory <b>${r.inv>=0?'+':''}${r.inv}</b>. `
+        + `<small>You're sitting on a big position — that P&amp;L is a directional bet (drift ${fmt(r.drift)}), not earned spread. One bad tick erases it. Skew harder.</small>`;
+    } else if(!profitable && flat){
+      v.className='verdict bad';
+      v.innerHTML = `🩸 FLAT but BLEEDING — P&amp;L <b>${fmt(r.pnl)}</b>, inventory <b>${r.inv>=0?'+':''}${r.inv}</b>. `
+        + `<small>The spread (${fmt(r.spread)}) didn't cover adverse selection (${fmt(r.adv)}). Widen your quote, or there's too much toxic flow to quote into.</small>`;
+    } else {
+      v.className='verdict bad';
+      v.innerHTML = `💥 BLEEDING and inventory BLEW UP — P&amp;L <b>${fmt(r.pnl)}</b>, inventory <b>${r.inv>=0?'+':''}${r.inv}</b>. `
+        + `<small>Worst of both worlds: losing money AND stuck holding risk. Add skew to stay flat and widen the spread to survive the toxic flow.</small>`;
+    }
+  }
+
+  function quoteLine(){
+    const lean = 0; // illustrate at flat inventory
+    const bid = (100 - halfSpread - lean), ask = (100 + halfSpread - lean);
+    $('quoteline').innerHTML = `at fair 100.00 you quote bid <b>${bid.toFixed(2)}</b> / ask <b>${ask.toFixed(2)}</b>`;
+  }
+
+  function showStatic(){
+    // recompute instantly (no animation) so sliders give live feedback
+    const r = simulate();
+    drawCurve(r.pnlHist);
+    paintStats(r);
+    setVerdict(r);
+    quoteLine();
+    return r;
+  }
+
+  function run(){
+    if(raf){ cancelAnimationFrame(raf); raf=null; $('run').textContent='▶ Run session'; return; }
+    const r = simulate();
+    quoteLine();
+    $('run').textContent='⏸ Stop';
+    const n = r.pnlHist.length;
+    let frame = 0;
+    const STEP = Math.max(1, Math.round(n/90));   // ~90 animation frames
+    const tick = () => {
+      frame = Math.min(n, frame+STEP);
+      drawCurve(r.pnlHist, frame);
+      // partial stats: scale fills/decomposition by progress for a "building" feel
+      const prog = frame/n;
+      paintStats({
+        fills: Math.round(r.fills*prog), toxic: Math.round(r.toxic*prog),
+        spread: r.spread*prog, adv: r.adv*prog, drift: r.drift*prog,
+        pnl: r.pnlHist[frame-1], inv: r.invHist[frame-1]
+      }, r.invHist[frame-1]);
+      if(frame < n){ raf = requestAnimationFrame(tick); }
+      else { raf=null; $('run').textContent='▶ Run session'; paintStats(r); setVerdict(r); }
+    };
+    tick();
+  }
+
+  // ---- wiring ----
+  $('hs').oninput = e => { halfSpread = (+e.target.value)/100; $('hs-val').textContent=halfSpread.toFixed(2);
+    if(raf){cancelAnimationFrame(raf);raf=null;$('run').textContent='▶ Run session';} showStatic(); };
+  $('sk').oninput = e => { skew = (+e.target.value)/1000; $('sk-val').textContent=skew.toFixed(3);
+    if(raf){cancelAnimationFrame(raf);raf=null;$('run').textContent='▶ Run session';} showStatic(); };
+  $('inf').oninput = e => { informedFrac = (+e.target.value)/100; $('inf-val').textContent=e.target.value+'%';
+    if(raf){cancelAnimationFrame(raf);raf=null;$('run').textContent='▶ Run session';} showStatic(); };
+  $('run').onclick = run;
+  $('reseed').onclick = () => {
+    seed = (Math.random()*1e9)|0;
+    if(raf){cancelAnimationFrame(raf);raf=null;$('run').textContent='▶ Run session';}
+    showStatic();
+  };
+
+  // place the cap markers on the gauge (at |inv| = CAP, i.e. the very edges)
+  $('capL').style.left='0%'; $('capR').style.left='calc(100% - 2px)';
+  showStatic();
+})();
+</script>
+
+</body>
+</html>

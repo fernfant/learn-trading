@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>L20 · Latency &amp; the queue — Learn to Trade</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .wkrow{display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap}
+  .wkrow canvas{flex:1.5;min-width:340px}
+  .ctrls{flex:1;min-width:260px}
+  .makerbox{font-family:ui-monospace,monospace;border:1px solid var(--line);border-radius:10px;
+    padding:10px 12px;margin:8px 0;background:var(--panel2)}
+  .makerbox.fast{border-color:#1f5e4a} .makerbox.slow{border-color:#6e2b2e}
+  .makerbox .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+  .mname{font-weight:700} .mname.fast{color:var(--up2)} .mname.slow{color:var(--down2)}
+  .mpnl{font-weight:700;font-size:15px}
+  .sharebar{height:18px;border-radius:6px;background:var(--code-bg);border:1px solid var(--line);
+    overflow:hidden;display:flex;margin:6px 0}
+  .sharebar .seg{height:100%;transition:width .12s linear;display:flex;align-items:center;
+    justify-content:center;font-size:11px;font-weight:700;color:#03130d;white-space:nowrap}
+  .sharebar .seg.fast{background:var(--up2)} .sharebar .seg.slow{background:var(--down2);color:#1b0405}
+  .latrow{font-family:ui-monospace,monospace;font-size:13px;margin:14px 0 4px}
+  .latrow label{display:block;margin-bottom:4px;color:var(--dim)}
+  .latrow input[type=range]{width:100%}
+  .latval{color:var(--ink);font-weight:700}
+  .up3{color:var(--up2);font-weight:700} .down3{color:var(--down2);font-weight:700}
+  .note{font-family:ui-monospace,monospace;font-size:13px;min-height:20px;margin-top:8px;color:var(--dim)}
+  .legend{display:flex;gap:18px;font-family:ui-monospace,monospace;font-size:12.5px;color:var(--dim);
+    margin-top:10px;flex-wrap:wrap}
+  .legend .k{display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:5px;vertical-align:middle}
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <a href="index.html" class="brand">📈 Learn to Trade</a>
+  <div class="lesson-pills">
+    <a href="index.html">Index</a>
+    <a class="t1" href="index.html#track1">T1</a>
+    <a class="t2" href="lesson_12.html">L12</a>
+    <a class="t2" href="lesson_13.html">L13</a>
+    <a class="t2" href="lesson_14.html">L14</a>
+    <a class="t2" href="lesson_15.html">L15</a>
+    <a class="t2" href="lesson_16.html">L16</a>
+    <a class="t2" href="lesson_17.html">L17</a>
+    <a class="t2" href="lesson_18.html">L18</a>
+    <a class="t2" href="lesson_19.html">L19</a>
+    <a class="t2 current" href="lesson_20.html">L20</a>
+    <a class="t2" href="lesson_21.html">L21</a>
+    <a class="t2" href="lesson_22.html">L22🏆</a>
+  </div>
+</nav>
+
+<div class="wrap">
+
+<h1>Lesson 20 · Latency &amp; the queue — why microseconds pay</h1>
+<p class="subtitle">Price-time priority (Lesson 15) says best price wins, and at the
+<em>same</em> price whoever arrived <strong>first</strong> sits at the front of the queue and fills first.
+So when two market makers quote the <strong>identical</strong> price, the trade goes to whoever's order got
+there first — and that's decided by <strong>latency</strong>. Lower latency ⇒ earlier in line ⇒ more fills ⇒
+more spread captured. <span class="up3">Speed is money.</span></p>
+
+<div class="demo">
+  <h3>🏁 The race: same price, different speed</h3>
+  <p class="subtitle" style="margin:4px 0 12px">Two makers quote the <em>exact same</em> price. A stream of
+  orders arrives; each one goes to whoever is further in front of the queue. Drag the <b>Slow maker's
+  latency</b> slider down toward the Fast maker and watch its <b class="down3">fill share</b> and P&amp;L
+  climb. Nobody changes their price — only their speed.</p>
+  <div class="wkrow">
+    <canvas id="race" width="900" height="240"></canvas>
+    <div class="ctrls">
+      <div class="makerbox fast">
+        <div class="top"><span class="mname fast">⚡ Fast maker</span>
+          <span class="mpnl up3" id="f-pnl">$0.00</span></div>
+        <div class="sharebar"><div class="seg fast" id="f-seg" style="width:50%">50%</div>
+          <div class="seg slow" id="s-seg" style="width:50%">50%</div></div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--dim)">
+          <span>latency <b class="latval">1µs</b> · fills <b id="f-fills">0</b></span>
+          <span>fills <b id="s-fills">0</b> · <span class="down3">Slow</span></span>
+        </div>
+      </div>
+      <div class="makerbox slow">
+        <div class="top"><span class="mname slow">🐢 Slow maker</span>
+          <span class="mpnl down3" id="s-pnl">$0.00</span></div>
+        <div class="latrow" style="margin:2px 0 0">
+          <label>Slow maker latency: <span class="latval" id="lat-label">10µs</span>
+            <span style="color:#5a636e">(Fast is fixed at 1µs)</span></label>
+          <input type="range" id="lat" min="1" max="20" step="1" value="10">
+        </div>
+      </div>
+      <div class="note" id="note">10× slower → wins roughly 1/10th of the flow. Drag the slider.</div>
+      <div class="btnrow">
+        <button id="run" class="up">▶ Run the flow</button>
+        <button id="reset">↻ Reset</button>
+      </div>
+      <div class="legend">
+        <span><span class="k" style="background:#34d399"></span>Fast maker (front of queue)</span>
+        <span><span class="k" style="background:#f87171"></span>Slow maker (further back)</span>
+        <span><span class="k" style="background:#f0b429"></span>incoming order</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="callout info">
+  💡 <strong>It's the same four-cent spread either way.</strong> Both makers quote <code>fair ± 0.05</code>
+  — identical prices, identical edge per fill. The only thing that differs is who gets to the front of the
+  queue first. Halve your latency and you roughly <em>double</em> your share of the flow. That curve is the
+  entire business case for <strong>co-location</strong> (a rack inside the exchange) and
+  <strong>microwave links</strong> (light through air beats light through glass) — the story in Michael
+  Lewis's <em>Flash Boys</em>.
+</div>
+
+<div class="callout warn">
+  <strong>Speed cuts both ways — and it isn't free.</strong> A fast maker also <em>cancels</em> stale quotes
+  before a price move runs them over; the slow maker is still resting there and gets picked off (a preview of
+  <strong>adverse selection</strong>, Lesson 21). But the speed itself costs a fortune — racks, fibre,
+  microwave towers — and when <em>everyone</em> is fast, nobody is. The spread is still the only edge; latency
+  just decides whose hand it lands in. <strong>No free money here either.</strong>
+</div>
+
+<div class="recap">
+  <div class="r-title">✅ You can now say…</div>
+  <ul>
+    <li>At the <strong>same price</strong>, price-time priority hands the fill to whoever's order
+      <strong>arrived first</strong> — i.e. to lower <strong>latency</strong>.</li>
+    <li>A maker's fill <strong>share</strong> rises as its latency falls (≈ proportional to
+      <code>1 / latency</code>); halving latency roughly doubles the flow you win.</li>
+    <li>Speed wins <em>more</em> good flow <strong>and</strong> dodges <em>more</em> bad flow by cancelling
+      faster — both edges point the same way: faster is richer.</li>
+    <li>This is <strong>co-location</strong> and the microsecond arms race (<em>Flash Boys</em>); in
+      <code>../exchange.py</code> it's the line <code>share = speed/(speed+rival)</code>.</li>
+  </ul>
+</div>
+
+<p style="margin-top:24px">
+  <a href="lesson_19.html">← L19: Inventory risk</a> &nbsp;·&nbsp;
+  <a href="lesson_21.html"><strong>L21: Adverse selection — toxic flow runs you over →</strong></a>
+</p>
+
+</div>
+
+<footer class="site">
+  Built by <a href="https://github.com/fernfant">@fernfant</a> ·
+  <a href="https://github.com/fernfant/learn-trading">source on GitHub</a> · MIT licensed
+</footer>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const HALF_SPREAD = 0.05, FAST_LAT = 1, STEPS = 600;
+
+  const cv = $('race'), ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height;
+
+  let slowLat = 10;
+  let fFills = 0, sFills = 0, fCash = 0, sCash = 0, fInv = 0, sInv = 0;
+  let fair = 100.0, done = 0, raf = null;
+  // a little stream of flying order dots for the animation
+  let orders = [];   // {x, y, side, lane}
+
+  function speeds(){ return [1/FAST_LAT, 1/slowLat]; }
+
+  function onFill(who, side){
+    // who: 'f' or 's'. taker buys from us -> we sell (cash up, inv down).
+    const price = side==='buy' ? fair+HALF_SPREAD : fair-HALF_SPREAD;
+    if(who==='f'){ fFills++; if(side==='buy'){fCash+=price;fInv--;}else{fCash-=price;fInv++;} }
+    else        { sFills++; if(side==='buy'){sCash+=price;sInv--;}else{sCash-=price;sInv++;} }
+  }
+  const fPnl = () => fCash + fInv*fair;
+  const sPnl = () => sCash + sInv*fair;
+
+  function reset(){
+    if(raf){cancelAnimationFrame(raf);raf=null;}
+    fFills=sFills=0; fCash=sCash=0; fInv=sInv=0; fair=100.0; done=0; orders=[];
+    paint(); draw();
+    $('note').textContent = slowLat===1
+      ? 'Equal latency → the spread splits ~50/50. Run it.'
+      : slowLat+'× slower → wins roughly 1/'+slowLat+'th of the flow. Run the flow.';
+  }
+
+  // one simulation step: an order arrives, a winner is drawn ~ proportional to speed
+  function step(){
+    if(done>=STEPS) return false;
+    const [sf, ss] = speeds(), total = sf+ss;
+    const side = Math.random()<0.5 ? 'buy' : 'sell';
+    const r = Math.random()*total;
+    const who = r <= sf ? 'f' : 's';     // fast sits in front; its slice is sf/total
+    onFill(who, side);
+    fair += (Math.random()*2-1)*0.01;
+    // spawn a flying dot toward the winning lane
+    orders.push({x:W-14, lane: who==='f'?0:1, side});
+    if(orders.length>26) orders.shift();
+    done++;
+    return true;
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    const laneY = [H*0.32, H*0.68];
+    // lane rails: fast on top (green), slow below (red)
+    [['#34d399','⚡ FAST  latency 1µs  · front of queue', 0],
+     ['#f87171','🐢 SLOW  latency '+slowLat+'µs', 1]].forEach(([col,lbl,i])=>{
+      ctx.strokeStyle=col; ctx.globalAlpha=0.5; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.moveTo(40,laneY[i]); ctx.lineTo(W-40,laneY[i]); ctx.stroke();
+      ctx.globalAlpha=1;
+      ctx.fillStyle=col; ctx.font='12px ui-monospace,monospace'; ctx.textAlign='left';
+      ctx.fillText(lbl, 44, laneY[i]-10);
+    });
+    // the "front of the queue" marker on the left
+    ctx.fillStyle='#9aa7b4'; ctx.textAlign='center'; ctx.font='11px ui-monospace,monospace';
+    ctx.fillText('FRONT', 22, H/2-6); ctx.fillText('OF', 22, H/2+6); ctx.fillText('QUEUE', 22, H/2+18);
+    ctx.strokeStyle='#5a636e'; ctx.setLineDash([3,3]); ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(40,20); ctx.lineTo(40,H-20); ctx.stroke(); ctx.setLineDash([]);
+    // flying order dots heading left toward their winning lane
+    orders.forEach(o=>{
+      o.x -= 16;
+      ctx.fillStyle='#f0b429'; ctx.beginPath(); ctx.arc(o.x, laneY[o.lane], 4, 0, 7); ctx.fill();
+    });
+    orders = orders.filter(o => o.x > 40);
+    // tally
+    ctx.fillStyle='#9aa7b4'; ctx.textAlign='right'; ctx.font='12px ui-monospace,monospace';
+    ctx.fillText('orders sent: '+done+' / '+STEPS, W-44, H-14);
+  }
+
+  function paint(){
+    const tot = fFills+sFills;
+    const fShare = tot ? fFills/tot*100 : 50;
+    const sShare = 100-fShare;
+    $('f-seg').style.width = fShare.toFixed(1)+'%';
+    $('s-seg').style.width = sShare.toFixed(1)+'%';
+    $('f-seg').textContent = tot ? fShare.toFixed(0)+'%' : '50%';
+    $('s-seg').textContent = tot ? sShare.toFixed(0)+'%' : '50%';
+    $('f-fills').textContent = fFills;
+    $('s-fills').textContent = sFills;
+    $('f-pnl').textContent = (fPnl()>=0?'+':'-')+'$'+Math.abs(fPnl()).toFixed(2);
+    $('s-pnl').textContent = (sPnl()>=0?'+':'-')+'$'+Math.abs(sPnl()).toFixed(2);
+    $('lat-label').textContent = slowLat+'µs';
+    // the fast maker's static latency label inside its box
+    document.querySelectorAll('.latval')[0].textContent = '1µs';
+  }
+
+  function run(){
+    if(raf){cancelAnimationFrame(raf);raf=null;return;}
+    if(done>=STEPS) reset();
+    const loop=()=>{
+      // a few sim steps per frame so it finishes briskly
+      for(let k=0;k<6 && done<STEPS;k++) step();
+      paint(); draw();
+      if(done<STEPS){ raf=requestAnimationFrame(loop); }
+      else {
+        raf=null;
+        const tot=fFills+sFills, fS=(fFills/tot*100);
+        $('note').innerHTML = slowLat===1
+          ? `equal latency → <span class="up3">Fast ${fS.toFixed(0)}%</span> / `
+            + `<span class="down3">Slow ${(100-fS).toFixed(0)}%</span> — speed was the only difference, so the spread splits evenly.`
+          : `Fast is ${slowLat}× faster and won <span class="up3">${fS.toFixed(0)}%</span> of the flow `
+            + `(≈ proportional to 1/latency). Same price — speed alone decided it.`;
+      }
+    };
+    raf=requestAnimationFrame(loop);
+  }
+
+  $('lat').oninput = e => { slowLat = +e.target.value; reset(); };
+  $('run').onclick = run;
+  $('reset').onclick = reset;
+  reset();
+})();
+</script>
+
+</body>
+</html>

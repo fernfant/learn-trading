@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>L12 · Taker → Maker — Learn to Trade</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .wkrow{display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap}
+  .wkrow canvas{flex:1.5;min-width:340px}
+  .ctrls{flex:1;min-width:260px}
+  .seatpick{display:flex;gap:10px;margin-bottom:12px}
+  .seatpick button{flex:1}
+  .seatpick button.sel{outline:2px solid var(--accent);outline-offset:1px}
+  .seatbadge{display:inline-block;font-size:12px;font-weight:700;padding:3px 11px;border-radius:999px;margin-bottom:4px}
+  .seatbadge.taker{background:var(--down);color:#1b0405}
+  .seatbadge.maker{background:var(--up);color:#03130d}
+  .ledger{font-family:ui-monospace,monospace;line-height:1.6;margin:8px 0 2px}
+  .ledger .row{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--line)}
+  .ledger .row span:first-child{color:var(--dim)}
+  .ledger .row b{color:var(--ink)}
+  .pnlbig{font-size:30px;font-weight:800;font-family:ui-monospace,monospace;margin:8px 0 2px}
+  .up3{color:var(--up2);font-weight:700} .down3{color:var(--down2);font-weight:700}
+  .formula{font-family:ui-monospace,monospace;font-size:13px;color:var(--dim);margin-top:6px}
+  .note{font-family:ui-monospace,monospace;font-size:13px;min-height:20px;margin-top:4px}
+  .legend{display:flex;gap:18px;font-family:ui-monospace,monospace;font-size:12.5px;color:var(--dim);margin-top:10px;flex-wrap:wrap}
+  .legend .k{display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:5px;vertical-align:middle}
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <a href="index.html" class="brand">📈 Learn to Trade</a>
+  <div class="lesson-pills">
+    <a href="index.html">Index</a>
+    <a class="t1" href="index.html#track1">T1</a>
+    <a class="t2 current" href="lesson_12.html">L12</a>
+    <a class="t2" href="lesson_13.html">L13</a>
+    <a class="t2" href="lesson_14.html">L14</a>
+    <a class="t2" href="lesson_15.html">L15</a>
+    <a class="t2" href="lesson_16.html">L16</a>
+    <a class="t2" href="lesson_17.html">L17</a>
+    <a class="t2" href="lesson_18.html">L18</a>
+    <a class="t2" href="lesson_19.html">L19</a>
+    <a class="t2" href="lesson_20.html">L20</a>
+    <a class="t2" href="lesson_21.html">L21</a>
+    <a class="t2" href="lesson_22.html">L22🏆</a>
+  </div>
+</nav>
+
+<div class="wrap">
+
+<h1>Lesson 12 · From price-<span class="down3">taker</span> to price-<span class="up3">maker</span></h1>
+<p class="subtitle">The hinge of the whole course. In Track 1 you were the <strong>customer</strong> — a
+price-<strong>taker</strong>. You crossed the spread and <em>paid</em> it on every trade. Now flip seats.
+Someone quoted you those two prices and pocketed the gap — a <strong>market maker</strong>, a
+price-<strong>maker</strong> (on capital.com, the broker). Same number, opposite sign:
+<span class="down3">cost</span> → <span class="up3">revenue</span>. No code this lesson — just the seat change.</p>
+
+<div class="demo">
+  <h3>🔁 Flip the seat: one round trip, two ledgers</h3>
+  <p class="subtitle" style="margin:4px 0 12px">A customer gets in (buys at the <b class="down3">ask</b>) and
+  out (sells at the <b class="up3">bid</b>) — they lose the spread. The market maker takes the
+  <em>opposite</em> side of both legs and books the spread as profit. Pick a seat, then play the trade and watch
+  the same 0.04 spread flow the other way.</p>
+  <div class="wkrow">
+    <canvas id="chart" width="900" height="240"></canvas>
+    <div class="ctrls">
+      <div class="seatpick">
+        <button class="down sel" id="seat-taker">🪑 Customer (taker)</button>
+        <button class="up" id="seat-maker">🏦 Market maker</button>
+      </div>
+      <div class="seatbadge taker" id="seat-badge">YOU: CUSTOMER · price-TAKER</div>
+      <div class="ledger">
+        <div class="row"><span id="l1-label">open: buy @ ask</span><b id="l1-val">—</b></div>
+        <div class="row"><span id="l2-label">close: sell @ bid</span><b id="l2-val">—</b></div>
+      </div>
+      <div class="pnlbig" id="pnl">$0.00</div>
+      <div class="formula" id="formula">spread = ask − bid = 100.02 − 99.98 = $0.04</div>
+      <div class="note" id="note">Pick a seat and play the round trip.</div>
+      <div class="btnrow">
+        <button id="play">▶ Play round trip</button>
+        <button id="reset">↻ Reset</button>
+      </div>
+      <div class="legend">
+        <span><span class="k" style="background:#f87171"></span>ask (sell price you're quoted)</span>
+        <span><span class="k" style="background:#34d399"></span>bid (buy price you're quoted)</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="callout info">
+  💡 <strong>It's the exact same four cents.</strong> The customer's ledger shows it in
+  <span class="down3">red</span> (a cost); the maker's shows it in <span class="up3">green</span> (revenue).
+  Nobody predicted which way the price went — the maker simply <em>stood in the middle</em> and got paid a fee
+  for providing liquidity. That fee is the spread.
+</div>
+
+<div class="callout warn">
+  <strong>The maker is not printing free money.</strong> Each fill leaves the maker holding a position they
+  didn't want — that's <strong>inventory risk</strong> (Lesson 19) — and some takers know something you don't:
+  the <strong>informed trader</strong> from Lesson 0, your faint <em>signal</em> in Track 1, is now your hazard.
+  When they pick you off it's called <strong>adverse selection</strong> (Lesson 21). Staying profitable
+  <em>and</em> flat is the actual job — the Lesson 22 capstone.
+</div>
+
+<div class="recap">
+  <div class="r-title">✅ You can now say…</div>
+  <ul>
+    <li>A <strong>price-taker</strong> crosses the spread and <em>pays</em> it; a <strong>price-maker</strong> quotes both sides and <em>earns</em> it.</li>
+    <li>It's the <strong>same spread</strong> seen from opposite seats — your <span class="down3">cost</span> in Track 1 is the maker's <span class="up3">revenue</span> in Track 2.</li>
+    <li>On capital.com the broker is the market maker; <strong>Track 2 builds that machine</strong> in <code>../exchange.py</code>.</li>
+    <li>Earning the spread isn't free: <strong>inventory risk</strong> and <strong>adverse selection</strong> are the maker's hazards.</li>
+  </ul>
+</div>
+
+<p style="margin-top:24px">
+  <a href="index.html">← Back to index</a> &nbsp;·&nbsp;
+  <a href="lesson_13.html"><strong>L13: The order book — build the thing that has a spread →</strong></a>
+</p>
+
+</div>
+
+<footer class="site">
+  Built by <a href="https://github.com/fernfant">@fernfant</a> ·
+  <a href="https://github.com/fernfant/learn-trading">source on GitHub</a> · MIT licensed
+</footer>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const BID = 99.98, ASK = 100.02, QTY = 1;
+  const SPREAD = ASK - BID;                 // 0.04
+
+  const cv = $('chart'), ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height, PAD = 40;
+  let seat = 'taker';   // 'taker' or 'maker'
+  let t = 0;            // animation progress 0..1 across the round trip
+  let phase = 0;        // 0 idle, 1 opened (filled at ask), 2 closed (filled at bid)
+  let raf = null;
+
+  // y maps a price to a pixel; the canvas shows a tight band around bid/ask
+  const LO = BID - 0.03, HI = ASK + 0.03;
+  const y = p => PAD + (1-(p-LO)/(HI-LO))*(H-2*PAD);
+  const xOpen = PAD + (W-2*PAD)*0.28;
+  const xClose = PAD + (W-2*PAD)*0.72;
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    // ask line (red) and bid line (green) — the two quoted prices
+    ctx.lineWidth=2;
+    ctx.strokeStyle='#f87171';
+    ctx.beginPath(); ctx.moveTo(PAD,y(ASK)); ctx.lineTo(W-PAD,y(ASK)); ctx.stroke();
+    ctx.strokeStyle='#34d399';
+    ctx.beginPath(); ctx.moveTo(PAD,y(BID)); ctx.lineTo(W-PAD,y(BID)); ctx.stroke();
+    // labels
+    ctx.font='12px ui-monospace,monospace'; ctx.textAlign='left';
+    ctx.fillStyle='#f87171'; ctx.fillText('ask  '+ASK.toFixed(2), PAD+4, y(ASK)-6);
+    ctx.fillStyle='#34d399'; ctx.fillText('bid  '+BID.toFixed(2), PAD+4, y(BID)+15);
+    // spread bracket between the two lines
+    ctx.strokeStyle='#5a636e'; ctx.setLineDash([3,3]); ctx.lineWidth=1;
+    const xm = W-PAD-10;
+    ctx.beginPath(); ctx.moveTo(xm,y(ASK)); ctx.lineTo(xm,y(BID)); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle='#9aa7b4'; ctx.textAlign='right';
+    ctx.fillText('spread $'+SPREAD.toFixed(2), xm-6, (y(ASK)+y(BID))/2+4);
+
+    // fill markers: open fills at ASK, close fills at BID (these are fixed facts of a round trip)
+    const openShown = phase>=1;
+    const closeShown = phase>=2;
+    // open marker
+    if(openShown) dot(xOpen, y(ASK), seat==='taker' ? '#f87171' : '#34d399', 'OPEN');
+    // close marker
+    if(closeShown) dot(xClose, y(BID), seat==='taker' ? '#34d399' : '#f87171', 'CLOSE');
+
+    // the spread-flow ribbon: a shaded band the trade "carried" between the two fills
+    if(closeShown){
+      ctx.globalAlpha=0.16;
+      ctx.fillStyle = seat==='taker' ? '#f87171' : '#34d399';
+      ctx.fillRect(xOpen, y(ASK), xClose-xOpen, y(BID)-y(ASK));
+      ctx.globalAlpha=1;
+      // arrow showing direction of the spread for this seat
+      ctx.fillStyle = seat==='taker' ? '#f87171' : '#34d399';
+      ctx.textAlign='center'; ctx.font='13px ui-monospace,monospace';
+      const mx=(xOpen+xClose)/2, my=(y(ASK)+y(BID))/2;
+      ctx.fillText(seat==='taker' ? 'you PAID the spread  −$'+SPREAD.toFixed(2)
+                                  : 'you EARNED the spread  +$'+SPREAD.toFixed(2), mx, my-8);
+    }
+
+    // moving "customer trade" dot while playing (always the customer's path: ask -> bid)
+    if(phase===1 && t<1){
+      const px = xOpen + (xClose-xOpen)*t;
+      const py = y(ASK) + (y(BID)-y(ASK))*t;
+      ctx.fillStyle='#f0b429'; ctx.beginPath(); ctx.arc(px,py,4,0,7); ctx.fill();
+    }
+  }
+  function dot(px,py,color,label){
+    ctx.fillStyle=color; ctx.beginPath(); ctx.arc(px,py,6,0,7); ctx.fill();
+    ctx.fillStyle='#9aa7b4'; ctx.font='11px ui-monospace,monospace'; ctx.textAlign='center';
+    ctx.fillText(label, px, py - (label==='OPEN' ? 12 : -20));
+  }
+
+  function paintLedger(){
+    const taker = seat==='taker';
+    $('seat-badge').textContent = taker ? 'YOU: CUSTOMER · price-TAKER' : 'YOU: MARKET MAKER · price-MAKER';
+    $('seat-badge').className = 'seatbadge ' + (taker ? 'taker' : 'maker');
+
+    // leg labels differ by seat (maker takes the opposite side of each leg)
+    $('l1-label').textContent = taker ? 'open:  you BUY @ ask'  : 'leg 1: you SELL @ ask';
+    $('l2-label').textContent = taker ? 'close: you SELL @ bid' : 'leg 2: you BUY @ bid';
+
+    const done = phase>=2;
+    if(!done){
+      $('l1-val').textContent = phase>=1 ? (taker?'-':'+')+'$'+(ASK*QTY).toFixed(2) : '—';
+      $('l2-val').textContent = '—';
+      $('pnl').textContent='$0.00'; $('pnl').className='pnlbig';
+      $('formula').textContent = `spread = ask − bid = ${ASK.toFixed(2)} − ${BID.toFixed(2)} = $${SPREAD.toFixed(2)}`;
+      return;
+    }
+    // round trip complete. Cash flows:
+    // taker: -ASK (buy) then +BID (sell)  => pnl = BID - ASK = -spread
+    // maker: +ASK (sell) then -BID (buy)  => pnl = ASK - BID = +spread
+    const pnl = taker ? (BID - ASK)*QTY : (ASK - BID)*QTY;
+    $('l1-val').textContent = (taker?'-':'+')+'$'+(ASK*QTY).toFixed(2);
+    $('l2-val').textContent = (taker?'+':'-')+'$'+(BID*QTY).toFixed(2);
+    $('l1-val').className = taker ? 'down3' : 'up3';
+    $('l2-val').className = taker ? 'up3' : 'down3';
+    $('pnl').textContent = (pnl>=0?'+':'-')+'$'+Math.abs(pnl).toFixed(2);
+    $('pnl').className = 'pnlbig ' + (pnl>=0?'up3':'down3');
+    $('formula').innerHTML = taker
+      ? `P&amp;L = bid − ask = ${BID.toFixed(2)} − ${ASK.toFixed(2)} = <b class="down3">−$${SPREAD.toFixed(2)}</b> (you paid the spread)`
+      : `P&amp;L = ask − bid = ${ASK.toFixed(2)} − ${BID.toFixed(2)} = <b class="up3">+$${SPREAD.toFixed(2)}</b> (you earned the spread)`;
+    $('note').innerHTML = taker
+      ? `cost ⇄ revenue: from <em>this</em> seat the spread is your <span class="down3">cost</span>.`
+      : `cost ⇄ revenue: from <em>this</em> seat the spread is your <span class="up3">revenue</span>.`;
+  }
+
+  function reset(){
+    if(raf){cancelAnimationFrame(raf);raf=null;}
+    phase=0; t=0; $('note').textContent='Pick a seat and play the round trip.';
+    draw(); paintLedger();
+  }
+  function play(){
+    if(raf){cancelAnimationFrame(raf);raf=null;}
+    phase=1; t=0; draw(); paintLedger();
+    const start = performance.now(), DUR=1100;
+    const loop = now => {
+      t = Math.min(1,(now-start)/DUR);
+      draw();
+      if(t<1){ raf=requestAnimationFrame(loop); }
+      else { phase=2; raf=null; draw(); paintLedger(); }
+    };
+    raf = requestAnimationFrame(loop);
+  }
+  function setSeat(s){
+    seat=s;
+    $('seat-taker').classList.toggle('sel', s==='taker');
+    $('seat-maker').classList.toggle('sel', s==='maker');
+    // keep the current trade state, just re-color it to the new seat
+    draw(); paintLedger();
+  }
+
+  $('seat-taker').onclick = ()=>setSeat('taker');
+  $('seat-maker').onclick = ()=>setSeat('maker');
+  $('play').onclick = play;
+  $('reset').onclick = reset;
+  reset();
+})();
+</script>
+
+</body>
+</html>

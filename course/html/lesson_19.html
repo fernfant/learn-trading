@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>L19 · Inventory risk — Learn to Trade</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .wkrow{display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap}
+  .wkrow canvas{flex:1.5;min-width:340px}
+  .ctrls{flex:1;min-width:280px}
+  .gauge{margin:2px 0 14px}
+  .gauge .lab{display:flex;justify-content:space-between;font-family:ui-monospace,monospace;
+    font-size:12px;color:var(--dim);margin-bottom:4px}
+  .gauge .track{position:relative;height:26px;border-radius:8px;background:var(--code-bg);
+    border:1px solid var(--line);overflow:hidden}
+  .gauge .mid{position:absolute;top:0;bottom:0;left:50%;width:1px;background:#5a636e}
+  .gauge .fill{position:absolute;top:2px;bottom:2px;border-radius:5px}
+  .gauge .fill.long{background:var(--up)} .gauge .fill.short{background:var(--down)}
+  .invbig{font-size:30px;font-weight:800;font-family:ui-monospace,monospace;margin:6px 0 2px}
+  .up3{color:var(--up2);font-weight:700} .down3{color:var(--down2);font-weight:700}
+  .flat3{color:var(--dim);font-weight:700}
+  .quotes{font-family:ui-monospace,monospace;line-height:1.7;margin:8px 0 2px}
+  .quotes .row{display:flex;justify-content:space-between;padding:2px 0}
+  .quotes .row span:first-child{color:var(--dim)}
+  .quotes .ask b{color:var(--down2)} .quotes .bid b{color:var(--up2)}
+  .quotes .res b{color:var(--accent)}
+  .slider{margin:14px 0 6px}
+  .slider label{display:flex;justify-content:space-between;font-family:ui-monospace,monospace;
+    font-size:13px;color:var(--dim);margin-bottom:6px}
+  .slider label b{color:var(--accent)}
+  input[type=range]{width:100%;accent-color:var(--accent)}
+  .note{font-family:ui-monospace,monospace;font-size:13px;min-height:20px;margin-top:6px;color:var(--dim)}
+  .legend{display:flex;gap:18px;font-family:ui-monospace,monospace;font-size:12.5px;color:var(--dim);
+    margin-top:10px;flex-wrap:wrap}
+  .legend .k{display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:5px;vertical-align:middle}
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <a href="index.html" class="brand">📈 Learn to Trade</a>
+  <div class="lesson-pills">
+    <a href="index.html">Index</a>
+    <a class="t1" href="index.html#track1">T1</a>
+    <a class="t2" href="lesson_12.html">L12</a>
+    <a class="t2" href="lesson_13.html">L13</a>
+    <a class="t2" href="lesson_14.html">L14</a>
+    <a class="t2" href="lesson_15.html">L15</a>
+    <a class="t2" href="lesson_16.html">L16</a>
+    <a class="t2" href="lesson_17.html">L17</a>
+    <a class="t2" href="lesson_18.html">L18</a>
+    <a class="t2 current" href="lesson_19.html">L19</a>
+    <a class="t2" href="lesson_20.html">L20</a>
+    <a class="t2" href="lesson_21.html">L21</a>
+    <a class="t2" href="lesson_22.html">L22🏆</a>
+  </div>
+</nav>
+
+<div class="wrap">
+
+<h1>Lesson 19 · Inventory risk — <span class="down3">skew</span> your quotes</h1>
+<p class="subtitle">As market maker you only wanted the <strong>spread</strong>. But every fill leaves you
+holding stock you didn't want — a customer buys, so you're <span class="down3">short</span>; a customer sells,
+so you're <span class="up3">long</span>. That leftover <strong>inventory</strong> is directional risk. The fix:
+<strong>skew</strong> your quotes by inventory. Quote around <code>reservation = fair − k·inventory</code>, not the raw
+mid — lean your prices toward whichever side gets you back to <strong>flat</strong>.</p>
+
+<div class="demo">
+  <h3>📊 The inventory desk — lean your quotes to stay flat</h3>
+  <p class="subtitle" style="margin:4px 0 12px">Run the same customer flow with <b class="accent" style="color:var(--accent)">skew k</b>
+  on. At <b>k = 0</b> inventory random-walks and <em>balloons</em> (naked risk). Slide <b>k</b> up and watch the
+  quotes <span class="down3">lean</span>, the gauge snap back toward center, and the inventory line hug zero.</p>
+  <div class="wkrow">
+    <canvas id="chart" width="900" height="260"></canvas>
+    <div class="ctrls">
+      <div class="gauge">
+        <div class="lab"><span class="down3">SHORT</span><span>inventory</span><span class="up3">LONG</span></div>
+        <div class="track"><div class="mid"></div><div class="fill flat" id="g-fill"></div></div>
+      </div>
+      <div class="invbig flat3" id="inv-big">0</div>
+      <div class="quotes">
+        <div class="row ask"><span>ask (you SELL)</span><b id="q-ask">100.05</b></div>
+        <div class="row res"><span>reservation</span><b id="q-res">100.00</b></div>
+        <div class="row bid"><span>bid (you BUY)</span><b id="q-bid">99.95</b></div>
+      </div>
+      <div class="slider">
+        <label>skew strength <b>k = <span id="k-val">0.000</span></b></label>
+        <input type="range" id="k-slider" min="0" max="40" value="0">
+      </div>
+      <div class="note" id="note">k = 0: quotes sit on the mid. Press Run and watch inventory wander off.</div>
+      <div class="btnrow">
+        <button id="run" class="down">▶ Run flow</button>
+        <button id="reset">↻ Reset</button>
+      </div>
+      <div class="legend">
+        <span><span class="k" style="background:#f87171"></span>no skew (k = 0)</span>
+        <span><span class="k" style="background:#f0b429"></span>your skew k</span>
+        <span><span class="k" style="background:#5a636e"></span>flat (inventory = 0)</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="callout info">
+  💡 <strong>The quotes lean toward flat.</strong> Go long and the reservation price drops <em>below</em> fair, so
+  both quotes shift down: a cheap ask begs someone to take stock off you, a stingy bid stops you buying more. Go
+  short and it flips up. You never predict the price — you just price yourself <em>back toward zero</em>. That's the
+  Avellaneda–Stoikov reservation price: <code>fair − k·inventory</code>.
+</div>
+
+<div class="callout warn">
+  <strong>It's not free.</strong> Leaning your quotes means shading them away from the mid, so you capture a little
+  <em>less</em> spread per trade. Crank k too high and you give away edge for inventory control you don't need.
+  The job (Lesson 22) is to find the sweet spot: <strong>capture the spread AND stay flat.</strong>
+</div>
+
+<div class="recap">
+  <div class="r-title">✅ You can now say…</div>
+  <ul>
+    <li>Every fill leaves the maker holding <strong>inventory</strong> — a position, and so <strong>directional risk</strong>.</li>
+    <li>With no skew, inventory <strong>random-walks</strong> away from zero and balloons; one move wipes out the spread you earned.</li>
+    <li>The fix: quote around a <strong>reservation price</strong> <code>fair − k·inventory</code>, leaning toward flat.</li>
+    <li>More skew = tighter inventory but slightly less spread captured — the <strong>Avellaneda–Stoikov</strong> trade-off.</li>
+    <li>In <code>../exchange.py</code> the maker now <strong>skews its quotes by <code>inventory</code></strong>.</li>
+  </ul>
+</div>
+
+<p style="margin-top:24px">
+  <a href="lesson_18.html">← L18: Be the market maker</a> &nbsp;·&nbsp;
+  <a href="lesson_20.html"><strong>L20: Latency &amp; the queue — why microseconds pay →</strong></a>
+</p>
+
+</div>
+
+<footer class="site">
+  Built by <a href="https://github.com/fernfant">@fernfant</a> ·
+  <a href="https://github.com/fernfant/learn-trading">source on GitHub</a> · MIT licensed
+</footer>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const FAIR = 100.0, HALF = 0.05, STEPS = 400;
+  const BASE = 0.5, SENS = 6.0;          // fill-probability curve (matches 19_inventory.py)
+  const MAXINV = 40;                      // gauge / chart vertical span
+
+  // a tiny seeded PRNG so "Run" is reproducible and both lines share one stream
+  function mulberry32(a){ return function(){ a|=0;a=a+0x6D2B79F5|0;
+    let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t;
+    return ((t^t>>>14)>>>0)/4294967296; }; }
+
+  const clamp = (v,lo,hi) => Math.max(lo,Math.min(hi,v));
+  const fillProb = d => clamp(BASE - SENS*d, 0.02, 0.98);   // keener price -> more flow
+
+  // simulate the maker over the fixed shock stream; returns inventory history
+  function simulate(k, shocks){
+    let inv = 0; const hist = [0];
+    for(const [ub,us] of shocks){
+      const res = FAIR - k*inv, bid = res-HALF, ask = res+HALF;
+      if(ub < fillProb(ask-FAIR)) inv -= 1;   // customer BUYS our ask -> we SELL
+      if(us < fillProb(FAIR-bid)) inv += 1;   // customer SELLS our bid -> we BUY
+      hist.push(inv);
+    }
+    return hist;
+  }
+
+  const cv = $('chart'), ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height, PAD = 30;
+  let shocks = [], histNo = [0], histK = [0], k = 0, animI = 0, raf = null;
+
+  const kFromSlider = () => $('k-slider').value / 1000;   // 0..40 -> 0.000..0.040
+
+  function makeShocks(){
+    const rnd = mulberry32(0x19);   // seed 0x19 = "19"
+    shocks = [];
+    for(let i=0;i<STEPS;i++) shocks.push([rnd(), rnd()]);
+  }
+
+  // map step index + inventory value to canvas pixels
+  const x = i => PAD + i*(W-2*PAD)/STEPS;
+  const y = v => PAD + (1 - (v+MAXINV)/(2*MAXINV))*(H-2*PAD);
+
+  function drawLine(hist, n, color, width){
+    ctx.strokeStyle=color; ctx.lineWidth=width; ctx.beginPath();
+    for(let i=0;i<=n && i<hist.length;i++){
+      const px=x(i), py=y(clamp(hist[i],-MAXINV,MAXINV));
+      i?ctx.lineTo(px,py):ctx.moveTo(px,py);
+    }
+    ctx.stroke();
+  }
+
+  function draw(n){
+    ctx.clearRect(0,0,W,H);
+    // flat (zero) reference line
+    ctx.strokeStyle='#5a636e'; ctx.setLineDash([4,4]); ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(PAD,y(0)); ctx.lineTo(W-PAD,y(0)); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle='#7d8895'; ctx.font='11px ui-monospace,monospace'; ctx.textAlign='left';
+    ctx.fillText('LONG +'+MAXINV, PAD+2, y(MAXINV)+12);
+    ctx.fillText('flat 0', PAD+2, y(0)-4);
+    ctx.fillText('SHORT -'+MAXINV, PAD+2, y(-MAXINV)-4);
+    // no-skew line (red) always shown for contrast
+    drawLine(histNo, n, '#f87171', 2);
+    // your-skew line (amber) — only diverges from red when k>0
+    drawLine(histK, n, '#f0b429', 2.5);
+  }
+
+  function paintPanel(n){
+    const inv = histK[Math.min(n, histK.length-1)];
+    const res = FAIR - k*inv, bid = res-HALF, ask = res+HALF;
+    $('q-res').textContent = res.toFixed(2);
+    $('q-ask').textContent = ask.toFixed(2);
+    $('q-bid').textContent = bid.toFixed(2);
+    // inventory readout
+    const big = $('inv-big');
+    big.textContent = (inv>0?'+':'')+inv;
+    big.className = 'invbig ' + (inv>0?'up3':inv<0?'down3':'flat3');
+    // gauge: a bar from center, length ~ |inv|/MAXINV of half-width
+    const fill = $('g-fill');
+    const frac = clamp(Math.abs(inv)/MAXINV, 0, 1) * 50;   // percent of half
+    if(inv>=0){ fill.className='fill long'; fill.style.left='50%'; fill.style.right='auto'; fill.style.width=frac+'%'; }
+    else      { fill.className='fill short'; fill.style.right='50%'; fill.style.left='auto'; fill.style.width=frac+'%'; }
+    if(inv===0){ fill.style.width='0%'; }
+  }
+
+  function setNote(){
+    if(k===0){
+      $('note').innerHTML = 'k = 0: quotes sit on the mid, never lean. Inventory <span class="down3">random-walks</span> off — naked risk.';
+    } else {
+      $('note').innerHTML = 'k = '+k.toFixed(3)+': quotes <b style="color:var(--accent)">lean</b> toward flat — inventory mean-reverts to <span class="flat3">0</span>.';
+    }
+  }
+
+  function recompute(){
+    k = kFromSlider();
+    $('k-val').textContent = k.toFixed(3);
+    histNo = simulate(0, shocks);
+    histK  = simulate(k, shocks);
+    setNote();
+  }
+
+  function reset(){
+    if(raf){cancelAnimationFrame(raf);raf=null;}
+    makeShocks(); recompute();
+    animI = STEPS;                 // show full curves at rest
+    draw(animI); paintPanel(animI);
+  }
+
+  function run(){
+    if(raf){cancelAnimationFrame(raf);raf=null;}
+    recompute(); animI = 0;
+    const loop = () => {
+      animI += 5;
+      draw(animI); paintPanel(animI);
+      if(animI < STEPS){ raf=requestAnimationFrame(loop); } else { raf=null; }
+    };
+    raf = requestAnimationFrame(loop);
+  }
+
+  $('k-slider').oninput = () => {           // live re-skew without re-running
+    recompute();
+    const n = (raf? animI : STEPS);
+    draw(n); paintPanel(n);
+  };
+  $('run').onclick = run;
+  $('reset').onclick = reset;
+  reset();
+})();
+</script>
+
+</body>
+</html>

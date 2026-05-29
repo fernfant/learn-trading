@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>L14 · A market order eats the book — Learn to Trade</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .wkrow{display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap}
+  .ladder{flex:1.1;min-width:300px}
+  .ctrls{flex:1;min-width:260px}
+  .lvl{display:grid;grid-template-columns:78px 1fr 46px;gap:10px;align-items:center;
+    font-family:ui-monospace,monospace;font-size:14px;padding:4px 0}
+  .lvl .px{text-align:right;font-weight:700}
+  .lvl .bar{height:18px;border-radius:5px;position:relative;overflow:hidden;background:var(--panel2);border:1px solid var(--line)}
+  .lvl .bar i{position:absolute;left:0;top:0;bottom:0;display:block;border-radius:4px}
+  .lvl .qty{color:var(--dim);font-size:13px}
+  .ask .px{color:var(--down2)} .ask .bar i{background:#7a2e31}
+  .bid .px{color:var(--up2)}   .bid .bar i{background:#1f5e4a}
+  .lvl.eaten{opacity:.92}
+  .lvl.eaten .bar i{background:var(--accent)!important}
+  .lvl.eaten .px{color:var(--accent)}
+  .lvl.partial .bar i{background:linear-gradient(90deg,var(--accent) var(--cut),#7a2e31 var(--cut))!important}
+  .bid.partial .bar i{background:linear-gradient(90deg,var(--accent) var(--cut),#1f5e4a var(--cut))!important}
+  .spreadbar{font-family:ui-monospace,monospace;font-size:12px;color:var(--dim);
+    text-align:center;border-top:1px dashed var(--line);border-bottom:1px dashed var(--line);padding:5px 0;margin:5px 0}
+  .dirpick{display:flex;gap:10px;margin-bottom:12px}
+  .dirpick button{flex:1}
+  .dirpick button.sel{outline:2px solid var(--accent)}
+  .sizerow{margin:8px 0 4px;font-family:ui-monospace,monospace;font-size:14px;display:flex;justify-content:space-between}
+  .sizerow b{color:var(--ink);font-size:18px}
+  input[type=range]{width:100%;accent-color:var(--down2)}
+  .report{font-family:ui-monospace,monospace;line-height:1.6;margin:10px 0 2px}
+  .report .row{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--line)}
+  .report .row span:first-child{color:var(--dim)}
+  .report .row b{color:var(--ink)}
+  .slipbig{font-size:26px;font-weight:800;font-family:ui-monospace,monospace;margin:8px 0 2px}
+  .up3{color:var(--up2);font-weight:700} .down3{color:var(--down2);font-weight:700}
+  .note{font-family:ui-monospace,monospace;font-size:13px;min-height:20px;margin-top:4px;color:var(--dim)}
+  button:disabled{opacity:.4;cursor:not-allowed;filter:none}
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <a href="index.html" class="brand">📈 Learn to Trade</a>
+  <div class="lesson-pills">
+    <a href="index.html">Index</a>
+    <a class="t1" href="index.html#track1">T1</a>
+    <a class="t2" href="lesson_12.html">L12</a>
+    <a class="t2" href="lesson_13.html">L13</a>
+    <a class="t2 current" href="lesson_14.html">L14</a>
+    <a class="t2" href="lesson_15.html">L15</a>
+    <a class="t2" href="lesson_16.html">L16</a>
+    <a class="t2" href="lesson_17.html">L17</a>
+    <a class="t2" href="lesson_18.html">L18</a>
+    <a class="t2" href="lesson_19.html">L19</a>
+    <a class="t2" href="lesson_20.html">L20</a>
+    <a class="t2" href="lesson_21.html">L21</a>
+    <a class="t2" href="lesson_22.html">L22🏆</a>
+  </div>
+</nav>
+
+<div class="wrap">
+
+<h1>Lesson 14 · A market order eats the book</h1>
+<p class="subtitle">A <strong>market order</strong> names no price. It says
+<em>"fill me NOW, whatever it costs."</em> It consumes the book from the best price outward —
+a small order is swallowed at the top, but a big order <strong>walks the book</strong> and pays a
+worse <em>average</em> price than the top. That gap is <strong>slippage</strong> — the very cost you
+paid as a customer in Track 1, now seen from the inside.</p>
+
+<div class="demo">
+  <h3>🍽️ Send a market order and watch it eat levels</h3>
+  <p class="subtitle" style="margin:4px 0 12px">Pick a <b>side</b> and a <b>size</b>, then
+  <b>Send</b>. A market <b style="color:var(--down2)">BUY</b> eats the cheapest
+  <b style="color:var(--down2)">asks</b> first; a <b style="color:var(--up2)">SELL</b> hits the highest
+  <b style="color:var(--up2)">bids</b> first. Consumed size turns <b style="color:var(--accent)">gold</b>.
+  Watch the average fill (VWAP) drift away from the top of book as you walk deeper.</p>
+  <div class="wkrow">
+    <div class="ladder">
+      <div id="book"></div>
+    </div>
+    <div class="ctrls">
+      <div class="dirpick">
+        <button class="down sel" id="side-buy">▼ Market BUY (eat asks)</button>
+        <button class="up" id="side-sell">▲ Market SELL (hit bids)</button>
+      </div>
+      <div class="sizerow"><span>order size</span><b id="size-val">3</b></div>
+      <input type="range" id="size" min="1" max="25" value="3">
+      <div class="report">
+        <div class="row"><span>top of book</span><b id="r-top">100.02</b></div>
+        <div class="row"><span>filled</span><b id="r-filled">—</b></div>
+        <div class="row"><span>avg fill (VWAP)</span><b id="r-vwap">—</b></div>
+      </div>
+      <div class="slipbig" id="r-slip">slippage —</div>
+      <div class="note" id="note">A small order fills at the top — no slippage. Drag the size up.</div>
+      <div class="btnrow">
+        <button class="down" id="send">▶ Send market order</button>
+        <button id="reset">↻ Refill book</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="callout info">
+  💡 <strong>VWAP is the price you actually paid.</strong> The number at the top of the book is only good
+  for the size resting there. The moment your order is bigger than the top level, you reach up (buys) or
+  down (sells) for worse prices, and your <em>volume-weighted average price</em> drifts away from it.
+</div>
+
+<div class="callout warn">
+  <strong>A market order trades price for certainty.</strong> It always fills — until the book runs dry —
+  but you don't control the price. Bigger order ⇒ walks deeper ⇒ more slippage. Thinner book ⇒ same.
+  This is the Track 1 slippage from <a href="lesson_09.html">Lesson 9</a>, now explained mechanically.
+</div>
+
+<div class="recap">
+  <div class="r-title">✅ You can now say…</div>
+  <ul>
+    <li>A <strong>market order</strong> fills now at any price, eating the book from the best level outward.</li>
+    <li>A small order fills at the top; a big one <strong>walks the book</strong> to worse levels.</li>
+    <li><strong>VWAP</strong> (volume-weighted average price) is the real price paid; <strong>slippage</strong> = VWAP vs top of book.</li>
+    <li>The line you added to <code>exchange.py</code>: <code>match_market(side, size)</code>, walking the levels.</li>
+    <li>Bigger order or thinner book ⇒ more slippage. Liquidity near the top is what protects you.</li>
+  </ul>
+</div>
+
+<p style="margin-top:24px">
+  <a href="lesson_13.html">← L13: The order book</a> &nbsp;·&nbsp;
+  <a href="lesson_15.html"><strong>L15: A limit order rests — price-time priority →</strong></a>
+</p>
+
+</div>
+
+<footer class="site">
+  Built by <a href="https://github.com/fernfant">@fernfant</a> ·
+  <a href="https://github.com/fernfant/learn-trading">source on GitHub</a> · MIT licensed
+</footer>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+
+  // Two-sided book. Asks: cheapest first. Bids: highest first.
+  const ASKS0 = [[100.02,4],[100.03,6],[100.05,3],[100.08,10],[100.12,8]];
+  const BIDS0 = [[99.98,5],[99.97,2],[99.95,8],[99.92,9],[99.88,7]];
+  let asks, bids, side='buy', timer=null;
+
+  const maxSize = () => Math.max(
+    ...ASKS0.map(l=>l[1]), ...BIDS0.map(l=>l[1])
+  );
+
+  function reset(){
+    if(timer){clearInterval(timer);timer=null;}
+    asks = ASKS0.map(l=>l.slice());
+    bids = BIDS0.map(l=>l.slice());
+    $('note').textContent = 'A small order fills at the top — no slippage. Drag the size up.';
+    $('r-filled').textContent='—'; $('r-vwap').textContent='—';
+    $('r-slip').textContent='slippage —'; $('r-slip').className='slipbig';
+    render([]);
+    $('send').disabled=false;
+  }
+
+  // levels for the active side, in the order a market order eats them.
+  // buy eats asks (cheapest first, top of list); sell hits bids (highest first).
+  const activeLevels = () => side==='buy' ? asks : bids;
+  const topPrice = () => activeLevels()[0][0];
+
+  // eaten = {idx: qtyTaken} map describing how much of each active level is consumed.
+  function render(plan){
+    const top = topPrice();
+    $('r-top').textContent = top.toFixed(2);
+    const eaten = {}; plan.forEach(p => eaten[p.i] = p.take);
+    const maxBar = maxSize();
+    let html = '';
+    // ASKS shown high->low (worst at top, best just above the spread line)
+    for(let i=asks.length-1;i>=0;i--){
+      html += levelRow('ask', i, asks[i], maxBar, side==='buy'?eaten:{});
+    }
+    const sp = (asks[0][0]-bids[0][0]);
+    html += `<div class="spreadbar">spread ${sp.toFixed(2)}  ·  mid ${((asks[0][0]+bids[0][0])/2).toFixed(3)}</div>`;
+    // BIDS shown high->low (best just below the spread line)
+    for(let i=0;i<bids.length;i++){
+      html += levelRow('bid', i, bids[i], maxBar, side==='sell'?eaten:{});
+    }
+    $('book').innerHTML = html;
+  }
+
+  function levelRow(cls, i, lvl, maxBar, eaten){
+    const [px, qty] = lvl;
+    const w = Math.max(6, qty/maxBar*100);
+    let extra='', cut='';
+    if(i in eaten){
+      const take = eaten[i];
+      if(take >= qty){ extra=' eaten'; }
+      else { extra=' partial'; cut = (take/qty*100).toFixed(0)+'%'; }
+    }
+    const cutStyle = cut ? ` style="--cut:${cut}"` : '';
+    return `<div class="lvl ${cls}${extra}"${cutStyle}>`
+      + `<div class="px">${px.toFixed(2)}</div>`
+      + `<div class="bar"><i style="width:${w}%"></i></div>`
+      + `<div class="qty">x${qty}</div></div>`;
+  }
+
+  // walk the active levels, return fill plan + vwap + filled
+  function planFill(size){
+    const levels = activeLevels();
+    let remaining = size, cost = 0, plan = [];
+    for(let i=0;i<levels.length && remaining>0;i++){
+      const avail = levels[i][1];
+      const take = Math.min(remaining, avail);
+      plan.push({i, price:levels[i][0], take});
+      cost += levels[i][0]*take;
+      remaining -= take;
+    }
+    const filled = size - remaining;
+    const vwap = filled>0 ? cost/filled : null;
+    return {plan, vwap, filled};
+  }
+
+  function report(vwap, filled, size){
+    const top = topPrice();
+    $('r-filled').textContent = filled<size ? `${filled} of ${size} (ran dry)` : `${filled}`;
+    if(vwap===null){ $('r-vwap').textContent='—'; return; }
+    $('r-vwap').textContent = vwap.toFixed(4);
+    // buy: slippage = vwap - top (you pay more). sell: top - vwap (you get less).
+    const slip = side==='buy' ? vwap - top : top - vwap;
+    const cls = slip>1e-9 ? 'down3' : 'up3';
+    $('r-slip').className = 'slipbig ' + (slip>1e-9?'down3':'');
+    $('r-slip').innerHTML = slip<=1e-9
+      ? `slippage <b class="up3">0.0000</b> — filled at the top`
+      : `slippage <b class="${cls}">+${slip.toFixed(4)}</b>/unit `
+        + `<span class="note" style="display:inline">($${(slip*filled).toFixed(2)} total)</span>`;
+    const verb = side==='buy' ? 'paid' : 'received';
+    $('note').innerHTML = slip<=1e-9
+      ? `fit entirely in the top level — you ${verb} the best price.`
+      : `walked ${planLevels} level(s): you ${verb} <b>${vwap.toFixed(4)}</b> vs a top of <b>${top.toFixed(2)}</b>.`;
+  }
+
+  let planLevels = 0;
+
+  function send(){
+    if(timer) return;
+    const size = +$('size').value;
+    const {plan, vwap, filled} = planFill(size);
+    planLevels = plan.length;
+    // animate eating one level at a time
+    let step = 0;
+    $('send').disabled = true;
+    render([]);
+    timer = setInterval(()=>{
+      step++;
+      render(plan.slice(0, step));
+      if(step >= plan.length){
+        clearInterval(timer); timer=null;
+        report(vwap, filled, size);
+        $('send').disabled = false;
+      }
+    }, 280);
+  }
+
+  $('size').oninput = () => { $('size-val').textContent = $('size').value; };
+  $('side-buy').onclick = () => {
+    side='buy'; $('side-buy').classList.add('sel'); $('side-sell').classList.remove('sel');
+    $('send').className='down'; reset();
+  };
+  $('side-sell').onclick = () => {
+    side='sell'; $('side-sell').classList.add('sel'); $('side-buy').classList.remove('sel');
+    $('send').className='up'; reset();
+  };
+  $('send').onclick = send;
+  $('reset').onclick = reset;
+  reset();
+})();
+</script>
+
+</body>
+</html>

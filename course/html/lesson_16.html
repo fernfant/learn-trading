@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>L16 · The matching engine loop — Learn to Trade</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .wkrow{display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap}
+  .bookcol{flex:1.1;min-width:300px}
+  .ctrls{flex:1;min-width:260px}
+  .book{font-family:ui-monospace,monospace;font-size:14px;background:var(--code-bg);
+    border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+  .lvl{display:flex;align-items:center;gap:10px;padding:2px 0}
+  .lvl .px{width:72px;text-align:right}
+  .lvl .bar{height:14px;border-radius:3px}
+  .lvl.ask .px{color:var(--down2)} .lvl.ask .bar{background:var(--down)}
+  .lvl.bid .px{color:var(--up2)}   .lvl.bid .bar{background:var(--up)}
+  .lvl .sz{color:var(--dim);width:40px}
+  .lvl.flash{animation:fl .5s ease-out}
+  @keyframes fl{from{background:var(--accent);border-radius:4px}to{background:transparent}}
+  .spreadline{display:flex;justify-content:center;color:var(--accent);font-weight:700;
+    font-size:12.5px;border-top:1px dashed var(--line);border-bottom:1px dashed var(--line);
+    margin:6px 0;padding:5px 0}
+  .empty{color:var(--dim);text-align:center;padding:6px 0;font-style:italic}
+  .form{display:flex;flex-direction:column;gap:10px}
+  .sidepick{display:flex;gap:10px}
+  .sidepick button{flex:1}
+  .sidepick button.sel.up{outline:2px solid var(--up2)}
+  .sidepick button.sel.down{outline:2px solid var(--down2)}
+  .field{display:flex;align-items:center;gap:10px;font-family:ui-monospace,monospace;font-size:14px}
+  .field label{width:52px;color:var(--dim)}
+  .field input{flex:1;font:inherit;background:var(--code-bg);color:var(--ink);
+    border:1px solid var(--line);border-radius:8px;padding:7px 10px}
+  .note{font-family:ui-monospace,monospace;font-size:13px;min-height:38px;margin-top:2px;color:var(--dim)}
+  .tape{font-family:ui-monospace,monospace;font-size:13px;background:var(--code-bg);
+    border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-top:12px;
+    max-height:150px;overflow-y:auto}
+  .tape .t-title{color:var(--dim);font-weight:700;margin-bottom:4px}
+  .tape .trade{padding:2px 0;border-bottom:1px solid var(--line)}
+  .tape .trade .tr{color:var(--accent);font-weight:700}
+  .tape .trade.rest{color:var(--dim)}
+  .tape .none{color:var(--dim);font-style:italic}
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <a href="index.html" class="brand">📈 Learn to Trade</a>
+  <div class="lesson-pills">
+    <a href="index.html">Index</a>
+    <a class="t1" href="index.html#track1">T1</a>
+    <a class="t2" href="lesson_12.html">L12</a>
+    <a class="t2" href="lesson_13.html">L13</a>
+    <a class="t2" href="lesson_14.html">L14</a>
+    <a class="t2" href="lesson_15.html">L15</a>
+    <a class="t2 current" href="lesson_16.html">L16</a>
+    <a class="t2" href="lesson_17.html">L17</a>
+    <a class="t2" href="lesson_18.html">L18</a>
+    <a class="t2" href="lesson_19.html">L19</a>
+    <a class="t2" href="lesson_20.html">L20</a>
+    <a class="t2" href="lesson_21.html">L21</a>
+    <a class="t2" href="lesson_22.html">L22🏆</a>
+  </div>
+</nav>
+
+<div class="wrap">
+
+<h1>Lesson 16 · The matching engine loop — crossed orders become trades</h1>
+<p class="subtitle">This is the heart of every exchange. When an incoming order <strong>crosses</strong>
+the book — a <em>buy</em> priced at or above the best ask, or a <em>sell</em> at or below the best bid —
+the engine <strong>matches</strong> them into a <strong>trade</strong>, printed at the <em>resting</em>
+order's price. It eats size from both, then loops while the order keeps crossing. Whatever's left over
+<strong>rests</strong> as a new limit. One loop, run on every order, <em>is</em> the machine.</p>
+
+<div class="demo">
+  <h3>⚙️ Submit an order into a live book</h3>
+  <p class="subtitle" style="margin:4px 0 12px">Pick a side, a price, and a size, then <b>Submit</b>.
+  If it crosses, watch it sweep the best opposite levels — each fill prints to the
+  <b style="color:var(--accent)">tape</b> — and any leftover drops in as a new resting level.
+  If it doesn't cross, it just rests. <b style="color:var(--up2)">Bids</b> are green,
+  <b style="color:var(--down2)">asks</b> are red.</p>
+  <div class="wkrow">
+    <div class="bookcol">
+      <div class="book" id="book"></div>
+      <div class="tape" id="tape">
+        <div class="t-title">📜 Tape (trades printed)</div>
+        <div class="none" id="tape-empty">no trades yet — submit a crossing order</div>
+      </div>
+    </div>
+    <div class="ctrls">
+      <div class="form">
+        <div class="sidepick">
+          <button class="up sel" id="pick-buy">▲ Buy</button>
+          <button class="down" id="pick-sell">▼ Sell</button>
+        </div>
+        <div class="field"><label>price</label><input id="in-price" type="number" step="0.01" value="100.02"></div>
+        <div class="field"><label>size</label><input id="in-size" type="number" step="1" min="1" value="4"></div>
+        <div class="btnrow">
+          <button class="up" id="submit">Submit order</button>
+          <button id="reset">↻ Reset book</button>
+        </div>
+        <div class="note" id="note">Buy 4 @ 100.02 meets the best ask exactly — it will cross and fill.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="callout info">
+  💡 <strong>Trades print at the <em>resting</em> price, not yours.</strong> The order already in the book
+  is the <strong>maker</strong> — it set the price and waited (Lesson 15's price-time priority). Your
+  incoming order is the <strong>taker</strong>, crossing the spread to hit it. The maker sets the terms;
+  the taker pays them. That's the Lesson 12 flip, made literal.
+</div>
+
+<div class="callout warn">
+  <strong>Crossed → trade, else rest.</strong> That single test runs on every order. A
+  <em>market</em> order (Lesson 14) is just a price so aggressive it always crosses. A non-crossing
+  <em>limit</em> (Lesson 15) skips the loop and rests. One machine, both behaviours — try a buy at 99.50
+  (rests) versus a buy at 101.00 (sweeps everything).
+</div>
+
+<div class="recap">
+  <div class="r-title">✅ You can now say…</div>
+  <ul>
+    <li>An order <strong>crosses</strong> when a buy's price ≥ the best ask, or a sell's price ≤ the best bid.</li>
+    <li>A match <strong>trades the smaller size</strong> at the <strong>resting</strong> order's price, then loops while it keeps crossing.</li>
+    <li>Any <strong>leftover rests</strong> as a new limit; a non-crossing order rests immediately.</li>
+    <li>This loop — the <code>match()</code> core of <code>exchange.py</code> — <em>is</em> the heart of an exchange.</li>
+  </ul>
+</div>
+
+<p style="margin-top:24px">
+  <a href="lesson_15.html">← L15: A limit order rests</a> &nbsp;·&nbsp;
+  <a href="lesson_17.html"><strong>L17: Market data &amp; the tape →</strong></a>
+</p>
+
+</div>
+
+<footer class="site">
+  Built by <a href="https://github.com/fernfant">@fernfant</a> ·
+  <a href="https://github.com/fernfant/learn-trading">source on GitHub</a> · MIT licensed
+</footer>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const SEED_BIDS = [[99.98,5],[99.97,2],[99.95,8]];
+  const SEED_ASKS = [[100.02,4],[100.03,6],[100.05,3]];
+
+  let bids, asks, trades, side, flashKeys;
+
+  function reset(){
+    bids = SEED_BIDS.map(o => o.slice());
+    asks = SEED_ASKS.map(o => o.slice());
+    trades = []; flashKeys = new Set();
+    render();
+    $('note').textContent = 'Fresh book: best bid 99.98, best ask 100.02, spread 0.04.';
+  }
+
+  const sortBids = () => bids.sort((a,b)=> b[0]-a[0]);   // high -> low
+  const sortAsks = () => asks.sort((a,b)=> a[0]-b[0]);   // low  -> high
+
+  // The matching loop. Returns {fills:[[price,size]], rested:size|0}.
+  function submit(s, price, size){
+    const fills = [];
+    if(s === 'buy'){
+      sortAsks();
+      while(size > 0 && asks.length && asks[0][0] <= price){
+        const lvl = asks[0], qty = Math.min(size, lvl[1]);
+        fills.push([lvl[0], qty]); trades.push([lvl[0], qty]);
+        size -= qty; lvl[1] -= qty;
+        if(lvl[1] === 0) asks.shift();
+      }
+      if(size > 0){ bids.push([price, size]); sortBids(); }
+    } else {
+      sortBids();
+      while(size > 0 && bids.length && bids[0][0] >= price){
+        const lvl = bids[0], qty = Math.min(size, lvl[1]);
+        fills.push([lvl[0], qty]); trades.push([lvl[0], qty]);
+        size -= qty; lvl[1] -= qty;
+        if(lvl[1] === 0) bids.shift();
+      }
+      if(size > 0){ asks.push([price, size]); sortAsks(); }
+    }
+    return {fills, rested: size};
+  }
+
+  function bestBid(){ return bids.length ? bids[0][0] : null; }
+  function bestAsk(){ return asks.length ? asks[0][0] : null; }
+
+  function render(){
+    const maxSz = Math.max(1, ...bids.map(o=>o[1]), ...asks.map(o=>o[1]));
+    const bar = sz => Math.round(8 + 70 * sz / maxSz);
+    const book = $('book');
+    let html = '';
+    if(asks.length){
+      [...asks].reverse().forEach(([p,s])=>{
+        const key = 'a'+p.toFixed(2);
+        html += `<div class="lvl ask${flashKeys.has(key)?' flash':''}"><span class="px">${p.toFixed(2)}</span>`
+              + `<span class="bar" style="width:${bar(s)}px"></span><span class="sz">x${s}</span></div>`;
+      });
+    } else {
+      html += `<div class="empty">— no asks —</div>`;
+    }
+    const bb = bestBid(), ba = bestAsk();
+    const sp = (bb!==null && ba!==null) ? `spread = ${(ba-bb).toFixed(2)}` : 'one side empty';
+    html += `<div class="spreadline">— ${sp} —</div>`;
+    if(bids.length){
+      bids.forEach(([p,s])=>{
+        const key = 'b'+p.toFixed(2);
+        html += `<div class="lvl bid${flashKeys.has(key)?' flash':''}"><span class="px">${p.toFixed(2)}</span>`
+              + `<span class="bar" style="width:${bar(s)}px"></span><span class="sz">x${s}</span></div>`;
+      });
+    } else {
+      html += `<div class="empty">— no bids —</div>`;
+    }
+    book.innerHTML = html;
+    flashKeys.clear();
+
+    const tape = $('tape');
+    if(!trades.length){
+      tape.innerHTML = `<div class="t-title">📜 Tape (trades printed)</div>`
+                     + `<div class="none" id="tape-empty">no trades yet — submit a crossing order</div>`;
+    } else {
+      let t = `<div class="t-title">📜 Tape (${trades.length} trades)</div>`;
+      [...trades].reverse().forEach(([p,s])=>{
+        t += `<div class="trade"><span class="tr">TRADE</span> ${s} @ ${p.toFixed(2)}</div>`;
+      });
+      tape.innerHTML = t;
+    }
+  }
+
+  function onSubmit(){
+    const price = parseFloat($('in-price').value);
+    const size = Math.max(1, Math.floor(parseFloat($('in-size').value) || 0));
+    if(!isFinite(price) || !size){
+      $('note').textContent = 'Enter a valid price and size.';
+      return;
+    }
+    const {fills, rested} = submit(side, price, size);
+    // mark touched levels for the flash highlight
+    fills.forEach(([p]) => flashKeys.add((side==='buy'?'a':'b')+p.toFixed(2)));
+    if(rested > 0) flashKeys.add((side==='buy'?'b':'a')+price.toFixed(2));
+    render();
+
+    const total = fills.reduce((a,[,s])=>a+s, 0);
+    const arrow = side==='buy' ? 'Buy' : 'Sell';
+    let msg;
+    if(!fills.length){
+      msg = `${arrow} ${size} @ ${price.toFixed(2)} didn't cross → the whole order RESTS as a new limit.`;
+    } else if(rested > 0){
+      msg = `${arrow} swept ${fills.length} level${fills.length>1?'s':''} (${total} filled); `
+          + `the leftover ${rested} didn't cross → RESTS in the book.`;
+    } else if(fills.length > 1){
+      msg = `${arrow} ${size} SWEPT ${fills.length} levels — fully filled, nothing rests.`;
+    } else {
+      msg = `${arrow} ${size} crossed and filled at ${fills[0][0].toFixed(2)} — nothing rests.`;
+    }
+    $('note').textContent = msg;
+  }
+
+  function pick(s){
+    side = s;
+    $('pick-buy').classList.toggle('sel', s==='buy');
+    $('pick-sell').classList.toggle('sel', s==='sell');
+  }
+
+  $('pick-buy').onclick = ()=>pick('buy');
+  $('pick-sell').onclick = ()=>pick('sell');
+  $('submit').onclick = onSubmit;
+  $('reset').onclick = reset;
+
+  pick('buy');
+  reset();
+})();
+</script>
+
+</body>
+</html>

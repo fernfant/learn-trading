@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>L15 · A limit order rests — Learn to Trade</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .wkrow{display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap}
+  .qcol{flex:1.5;min-width:320px}
+  .ctrls{flex:1;min-width:250px}
+  .pricetag{font-family:ui-monospace,monospace;font-weight:800;font-size:15px;color:var(--down2);
+    margin:0 0 8px;letter-spacing:.02em}
+  .lane{background:var(--code-bg);border:1px solid var(--line);border-radius:10px;padding:14px 16px;min-height:96px}
+  .lanehdr{display:flex;justify-content:space-between;font-family:ui-monospace,monospace;font-size:12px;
+    color:var(--dim);margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em}
+  .queue{display:flex;gap:8px;align-items:stretch;flex-wrap:wrap}
+  .ord{position:relative;min-width:62px;border-radius:9px;padding:9px 10px 8px;font-family:ui-monospace,monospace;
+    border:1px solid #6e2b2e;background:#23151644;transition:opacity .25s,transform .25s}
+  .ord.you{border-color:var(--accent);background:#1a130033;box-shadow:0 0 0 1px var(--accent) inset}
+  .ord.front{border-color:var(--down2);background:#2c171833}
+  .ord.filled{opacity:.28;transform:scale(.93)}
+  .ord .who{font-weight:700;font-size:13px;color:var(--ink)}
+  .ord .meta{font-size:11px;color:var(--dim);margin-top:2px}
+  .ord .seq{font-size:10px;color:#7d8895;margin-top:3px}
+  .frontflag{position:absolute;top:-9px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:700;
+    background:var(--down2);color:#1b0405;padding:1px 6px;border-radius:999px;white-space:nowrap}
+  .arrow{font-family:ui-monospace,monospace;font-size:12px;color:var(--dim);margin:8px 2px 2px;text-align:left}
+  .note{font-family:ui-monospace,monospace;font-size:13px;min-height:38px;margin-top:10px;color:var(--dim)}
+  .note b{color:var(--ink)} .hit{color:var(--down2);font-weight:700} .wait{color:var(--accent);font-weight:700}
+  .ctrls h4{font-size:13px;color:var(--dim);text-transform:uppercase;letter-spacing:.05em;margin:0 0 8px}
+  .seqcount{font-family:ui-monospace,monospace;font-size:12px;color:#7d8895;margin-top:10px}
+  button:disabled{opacity:.4;cursor:not-allowed;filter:none}
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <a href="index.html" class="brand">📈 Learn to Trade</a>
+  <div class="lesson-pills">
+    <a href="index.html">Index</a>
+    <a class="t1" href="index.html#track1">T1</a>
+    <a class="t2" href="lesson_12.html">L12</a>
+    <a class="t2" href="lesson_13.html">L13</a>
+    <a class="t2" href="lesson_14.html">L14</a>
+    <a class="t2 current" href="lesson_15.html">L15</a>
+    <a class="t2" href="lesson_16.html">L16</a>
+    <a class="t2" href="lesson_17.html">L17</a>
+    <a class="t2" href="lesson_18.html">L18</a>
+    <a class="t2" href="lesson_19.html">L19</a>
+    <a class="t2" href="lesson_20.html">L20</a>
+    <a class="t2" href="lesson_21.html">L21</a>
+    <a class="t2" href="lesson_22.html">L22🏆</a>
+  </div>
+</nav>
+
+<div class="wrap">
+
+<h1>Lesson 15 · A limit order rests — price-time priority</h1>
+<p class="subtitle">A <strong>market order</strong> shouted "fill me now!" (Lesson 14). A
+<strong>limit order</strong> is patient: <em>"fill me only at my price or better — otherwise wait."</em>
+If it can't trade right away it <strong>rests</strong> and joins a <strong>queue</strong>. The exchange serves
+that queue by <strong>price-time priority</strong>: better price first; among equal prices,
+<strong>first-in-first-out</strong>. Your place in line decides whether you actually get filled.</p>
+
+<div class="demo">
+  <h3>🪜 The queue at a price level</h3>
+  <p class="subtitle" style="margin:4px 0 12px">These are buyers (bids) resting at a price, waiting for a seller.
+  <b>Join the queue</b> at the going price and you fall in <em>behind</em> everyone already there. Pay a
+  <b style="color:var(--accent)">better price</b> and you jump to the very front. Then send in a market sell — it
+  eats the <b style="color:var(--down2)">front</b> of the line first.</p>
+  <div class="wkrow">
+    <div class="qcol">
+      <div class="pricetag" id="ptag">BID QUEUE — better price &amp; earlier arrival sit nearer the front</div>
+      <div class="lane">
+        <div class="lanehdr"><span>front of line (fills first) →</span><span>← back (waits)</span></div>
+        <div class="queue" id="queue"></div>
+      </div>
+      <div class="arrow" id="flow"></div>
+      <div class="note" id="note">Buyers are lined up at 99.98. Add yourself, then send a market sell and see who trades.</div>
+    </div>
+    <div class="ctrls">
+      <h4>Join the queue</h4>
+      <div class="btnrow" style="margin-top:0">
+        <button id="join">＋ You: bid 99.98 (same price)</button>
+      </div>
+      <div class="btnrow" style="margin-top:0">
+        <button class="up" id="jump">⤴ You: bid 99.99 (better — jump ahead)</button>
+      </div>
+      <h4 style="margin-top:18px">Then a seller arrives</h4>
+      <div class="btnrow" style="margin-top:0">
+        <button class="down" id="mkt">▼ Market SELL 8 units</button>
+      </div>
+      <div class="btnrow" style="margin-top:0">
+        <button id="other">＋ Another buyer joins (99.98)</button>
+        <button id="reset">↻ Reset queue</button>
+      </div>
+      <div class="seqcount" id="seqc"></div>
+    </div>
+  </div>
+</div>
+
+<div class="callout info">
+  💡 <strong>Two rules, in order.</strong> <b>Price first:</b> a higher bid always beats a lower one. <b>Time
+  second:</b> among orders at the <em>same</em> price, whoever arrived earlier sits ahead. Arrival is tracked with a
+  plain <em>sequence number</em> (#1, #2, #3…), not a clock — two orders can never share one, so there are no ties.
+</div>
+
+<div class="callout warn">
+  <strong>Your place in line is decided the instant you post.</strong> Join late at the same price as the crowd and a
+  market order may run out before it reaches you — you wait, untouched, while the people ahead of you trade. To get
+  filled sooner you must <em>pay a better price</em> to jump the queue, or <em>arrive earlier</em>. This is why HFTs
+  fight over microseconds (Lesson 20): a better spot in line is the difference between trading and waiting.
+</div>
+
+<div class="recap">
+  <div class="r-title">✅ You can now say…</div>
+  <ul>
+    <li>A <strong>limit order</strong> fills only at its price or better; if it can't, it <strong>rests</strong> in the book.</li>
+    <li>Resting orders are served by <strong>price-time priority</strong>: better price first, then earliest arrival (FIFO).</li>
+    <li>Arrival order is a <strong>sequence number</strong>, not a wall-clock time.</li>
+    <li>A market order consumes from the <strong>front</strong> of the queue — your place in line decides if you trade.</li>
+    <li>The line you added to <code>exchange.py</code>: <code>add_limit(side, price, size)</code> with priority sorting.</li>
+  </ul>
+</div>
+
+<p style="margin-top:24px">
+  <a href="lesson_14.html">← L14: A market order eats the book</a> &nbsp;·&nbsp;
+  <a href="lesson_16.html"><strong>L16: The matching engine loop →</strong></a>
+</p>
+
+</div>
+
+<footer class="site">
+  Built by <a href="https://github.com/fernfant">@fernfant</a> ·
+  <a href="https://github.com/fernfant/learn-trading">source on GitHub</a> · MIT licensed
+</footer>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  let book, seq;
+
+  function reset(){
+    seq = 0;
+    book = [];
+    // the crowd already resting at 99.98, in arrival order
+    add("Ann", 99.98, 5, false);
+    add("Bob", 99.98, 3, false);
+    add("Cara", 99.98, 4, false);
+    $('note').innerHTML = 'Buyers are lined up at 99.98. Add yourself, then send a market sell and see who trades.';
+    $('flow').textContent = '';
+    paint();
+  }
+
+  function add(who, price, size, you){
+    seq++;
+    book.push({who, price, size, seq, you, filled:false, taken:0});
+    sortBook();
+  }
+
+  // price-time priority: highest price first, then earliest seq
+  function sortBook(){ book.sort((a,b)=> b.price - a.price || a.seq - b.seq); }
+
+  function paint(){
+    sortBook();
+    const q = $('queue'); q.innerHTML='';
+    book.forEach((o,i)=>{
+      const d=document.createElement('div');
+      d.className='ord'+(o.you?' you':'')+(i===0&&!o.filled?' front':'')+(o.filled?' filled':'');
+      let flag = (i===0 && !o.filled) ? '<div class="frontflag">FRONT</div>' : '';
+      let szline = o.taken>0 && !o.filled
+        ? `<span class="hit">−${o.taken}</span> → x${o.size}`
+        : `x${o.size}`;
+      d.innerHTML = flag
+        + `<div class="who">${o.who}</div>`
+        + `<div class="meta">${o.price.toFixed(2)} · ${szline}</div>`
+        + `<div class="seq">arr #${o.seq}</div>`;
+      q.appendChild(d);
+    });
+    $('seqc').textContent = `next arrival = sequence #${seq+1}`;
+  }
+
+  function join(price, label){
+    if(book.some(o=>o.you)){ $('note').innerHTML = `You're already in the queue. <b>Reset</b> to try again.`; return; }
+    add("You", price, 6, true);
+    const pos = book.findIndex(o=>o.you) + 1;
+    paint();
+    $('note').innerHTML = label==='jump'
+      ? `You bid <b>99.99</b> — a better price, so you <span class="hit">jumped to the front</span>, ahead of the 99.98 crowd even though they arrived first.`
+      : `You joined at <b>99.98</b>, the same price as the crowd — so you fall in <span class="wait">behind them</span> at position #${pos}. Earlier arrivals sit ahead.`;
+    $('flow').textContent = '';
+  }
+
+  function marketSell(size){
+    if(book.every(o=>o.filled)){ $('note').innerHTML='Queue is empty — <b>Reset</b> first.'; return; }
+    let remaining = size;
+    const hits = [];
+    for(const o of book){
+      if(remaining<=0) break;
+      if(o.filled) continue;
+      const take = Math.min(remaining, o.size);
+      o.size -= take; o.taken += take; remaining -= take;
+      hits.push(`${take} from ${o.who}`);
+      if(o.size===0) o.filled = true;
+    }
+    paint();
+    const you = book.find(o=>o.you);
+    let verdict = '';
+    if(you){
+      if(you.filled) verdict = ` <b>You FILLED fully</b> — your place in line paid off.`;
+      else if(you.taken>0) verdict = ` <b>You got a partial</b> (${you.taken}); the order ran out mid-fill.`;
+      else verdict = ` <span class="wait">You did NOT trade</span> — too far back; the order ran out before reaching you.`;
+    }
+    $('flow').textContent = '▼ market sell '+size+' walks the queue: ' + hits.join('  →  ') + (remaining>0?`  (queue emptied, ${remaining} unfilled)`:'');
+    $('note').innerHTML = `The market sell ate the <span class="hit">front</span> first, in order.${verdict}`;
+  }
+
+  $('join').onclick  = ()=>join(99.98,'same');
+  $('jump').onclick  = ()=>join(99.99,'jump');
+  $('other').onclick = ()=>{ add("Eve",99.98,4,false); paint();
+    $('note').innerHTML = `Another buyer (Eve) joined at 99.98 — she falls in at the <span class="wait">back</span> of the 99.98 line.`; $('flow').textContent=''; };
+  $('mkt').onclick   = ()=>marketSell(8);
+  $('reset').onclick = reset;
+  reset();
+})();
+</script>
+
+</body>
+</html>

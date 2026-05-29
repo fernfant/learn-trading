@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>L13 · The order book — Learn to Trade</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .wkrow{display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap}
+  .bookwrap{flex:1.3;min-width:320px}
+  .ctrls{flex:1;min-width:260px}
+  /* the ladder */
+  .ladder{font-family:ui-monospace,monospace;font-size:14px;background:var(--code-bg);
+    border:1px solid var(--line);border-radius:10px;padding:10px 8px}
+  .lvl{display:flex;align-items:center;gap:8px;height:24px;padding:0 6px;border-radius:5px;position:relative}
+  .lvl .bar{position:absolute;top:2px;bottom:2px;left:0;border-radius:4px;opacity:.22;z-index:0}
+  .lvl.ask .bar{background:var(--down2)} .lvl.bid .bar{background:var(--up2)}
+  .lvl .px{width:78px;text-align:right;z-index:1;font-weight:700}
+  .lvl.ask .px{color:var(--down2)} .lvl.bid .px{color:var(--up2)}
+  .lvl .sz{width:46px;text-align:right;color:var(--dim);z-index:1}
+  .lvl .tag{color:#5a636e;font-size:12px;z-index:1}
+  .lvl.best{outline:1px solid var(--line)}
+  .lvl.best.ask{outline-color:#6e2b2e} .lvl.best.bid{outline-color:#1f5e4a}
+  .midbar{display:flex;align-items:center;justify-content:center;gap:16px;margin:7px 0;
+    padding:7px 10px;border:1px dashed var(--accent);border-radius:8px;background:#1a130011;
+    font-family:ui-monospace,monospace;font-size:13px;color:var(--accent);font-weight:700}
+  .midbar .lab{color:var(--dim);font-weight:400}
+  .heads{display:flex;justify-content:space-between;font-family:ui-monospace,monospace;
+    font-size:12px;color:#5a636e;padding:0 8px;margin:2px 0}
+  /* form */
+  .addform{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+  .addform label{font-family:ui-monospace,monospace;font-size:12px;color:var(--dim);display:block;margin-bottom:3px}
+  .addform input{width:100%;font:inherit;font-family:ui-monospace,monospace;background:var(--panel2);
+    color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+  .sidepick{display:flex;gap:10px;margin-bottom:8px}
+  .sidepick button{flex:1}
+  .stat{font-family:ui-monospace,monospace;line-height:1.7;margin:8px 0}
+  .stat .row{display:flex;justify-content:space-between;border-bottom:1px solid var(--line);padding:3px 0}
+  .stat .row span:first-child{color:var(--dim)}
+  .stat b{color:var(--ink)}
+  .up3{color:var(--up2);font-weight:700} .down3{color:var(--down2);font-weight:700}
+  .note{font-family:ui-monospace,monospace;font-size:13px;min-height:20px;margin-top:6px;color:var(--dim)}
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <a href="index.html" class="brand">📈 Learn to Trade</a>
+  <div class="lesson-pills">
+    <a href="index.html">Index</a>
+    <a class="t1" href="index.html#track1">T1</a>
+    <a class="t2" href="lesson_12.html">L12</a>
+    <a class="t2 current" href="lesson_13.html">L13</a>
+    <a class="t2" href="lesson_14.html">L14</a>
+    <a class="t2" href="lesson_15.html">L15</a>
+    <a class="t2" href="lesson_16.html">L16</a>
+    <a class="t2" href="lesson_17.html">L17</a>
+    <a class="t2" href="lesson_18.html">L18</a>
+    <a class="t2" href="lesson_19.html">L19</a>
+    <a class="t2" href="lesson_20.html">L20</a>
+    <a class="t2" href="lesson_21.html">L21</a>
+    <a class="t2" href="lesson_22.html">L22🏆</a>
+  </div>
+</nav>
+
+<div class="wrap">
+
+<h1>Lesson 13 · The order book — the book <em>is</em> the market</h1>
+<p class="subtitle">An exchange keeps almost nothing: just <strong>two sorted lists</strong>.
+<b style="color:var(--up2)">BIDS</b> are buyers, sorted highest-price-first (the most anyone will pay).
+<b style="color:var(--down2)">ASKS</b> are sellers, sorted lowest-price-first (the least anyone will accept).
+The top of each is the <strong>best bid / best ask</strong>; the gap is the <strong>spread</strong>; their
+average is the <strong>mid</strong> — and that mid is exactly the single "price" Track 1 traded against.</p>
+
+<div class="demo">
+  <h3>📕 A live order book — add orders and watch it move</h3>
+  <p class="subtitle" style="margin:4px 0 12px">Asks stack on top (<b style="color:var(--down2)">red</b>),
+  bids below (<b style="color:var(--up2)">green</b>), spread and mid in the middle. Bar width = <b>depth</b>
+  (size waiting). Post a bid <em>above</em> 99.98 and watch the spread tighten and the mid drift up.</p>
+  <div class="wkrow">
+    <div class="bookwrap">
+      <div class="heads"><span>price</span><span>size · depth →</span></div>
+      <div class="ladder" id="ladder"></div>
+    </div>
+    <div class="ctrls">
+      <div class="sidepick">
+        <button class="up" id="pick-bid">▲ Buyer (bid)</button>
+        <button class="down" id="pick-ask">▼ Seller (ask)</button>
+      </div>
+      <div class="addform">
+        <div><label>price</label><input id="in-price" type="number" step="0.01" value="99.99"></div>
+        <div><label>size</label><input id="in-size" type="number" step="1" min="1" value="3"></div>
+      </div>
+      <div class="btnrow" style="margin-top:0">
+        <button id="add" class="up">＋ Add order</button>
+        <button id="reset">↻ Reset book</button>
+      </div>
+      <div class="stat">
+        <div class="row"><span>best bid (you'd SELL here)</span><b id="s-bb">—</b></div>
+        <div class="row"><span>best ask (you'd BUY here)</span><b id="s-ba">—</b></div>
+        <div class="row"><span>spread</span><b id="s-sp">—</b></div>
+        <div class="row"><span>mid (Track 1's "price")</span><b id="s-mid">—</b></div>
+      </div>
+      <div class="note" id="note">This is the same book <code>exchange.py</code> starts with.</div>
+    </div>
+  </div>
+</div>
+
+<div class="callout info">
+  💡 <strong>The mid is where Track 1's price lived.</strong> You can never actually trade at the mid —
+  buying costs you the best ask, selling gets you the best bid. But it's the fair reference halfway between,
+  and it's the single number <code>market.py</code> handed you as "the price" all along.
+</div>
+
+<div class="callout warn">
+  <strong>Try posting a bid above the best ask</strong> (e.g. a bid at 100.10). That buyer would pay more than
+  the cheapest seller asks — they should trade <em>instantly</em>. This toy book just stacks it and the spread
+  goes <em>negative</em> (a "crossed" book), which a real exchange never allows. Turning two willing orders into
+  a trade is the <strong>matching engine</strong> — Lessons 14 and 16.
+</div>
+
+<div class="recap">
+  <div class="r-title">✅ You can now say…</div>
+  <ul>
+    <li>An <strong>order book</strong> is two sorted lists: <strong>bids</strong> (buyers, high→low) and <strong>asks</strong> (sellers, low→high).</li>
+    <li>The tops are the <strong>best bid</strong> and <strong>best ask</strong>; the gap is the <strong>spread</strong>; the average is the <strong>mid</strong>.</li>
+    <li>The <strong>mid</strong> is exactly the single "price" Track 1's <code>market.py</code> traded against.</li>
+    <li><strong>Depth</strong> = size resting at each level; a better quote <strong>tightens</strong> the spread.</li>
+    <li>A book is <strong>never crossed</strong> — a bid at or above the best ask must trade (next lessons).</li>
+  </ul>
+</div>
+
+<p style="margin-top:24px">
+  <a href="lesson_12.html">← L12: Taker → maker</a> &nbsp;·&nbsp;
+  <a href="lesson_14.html"><strong>L14: A market order eats the book →</strong></a>
+</p>
+
+</div>
+
+<footer class="site">
+  Built by <a href="https://github.com/fernfant">@fernfant</a> ·
+  <a href="https://github.com/fernfant/learn-trading">source on GitHub</a> · MIT licensed
+</footer>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const SEED_BIDS = [[99.98,5],[99.97,2],[99.95,8]];
+  const SEED_ASKS = [[100.02,4],[100.03,6],[100.05,3]];
+  let bids, asks, side;   // side: 'bid' | 'ask' — which button is armed
+
+  const clone = a => a.map(o => o.slice());
+  const bestBid = () => bids.length ? bids[0][0] : null;
+  const bestAsk = () => asks.length ? asks[0][0] : null;
+  const spread  = () => (bids.length && asks.length) ? bestAsk()-bestBid() : null;
+  const mid     = () => (bids.length && asks.length) ? (bestBid()+bestAsk())/2 : null;
+
+  function reset(){
+    bids = clone(SEED_BIDS); asks = clone(SEED_ASKS);
+    $('note').textContent = 'This is the same book exchange.py starts with.';
+    render();
+  }
+
+  function setSide(s){
+    side = s;
+    $('pick-bid').style.outline = s==='bid' ? '2px solid var(--up2)' : 'none';
+    $('pick-ask').style.outline = s==='ask' ? '2px solid var(--down2)' : 'none';
+    // sensible default price just inside the spread for the chosen side
+    const bb=bestBid(), ba=bestAsk();
+    if(s==='bid' && bb!=null) $('in-price').value = (bb+0.01).toFixed(2);
+    if(s==='ask' && ba!=null) $('in-price').value = (ba-0.01).toFixed(2);
+  }
+
+  function add(){
+    const price = parseFloat($('in-price').value);
+    const size  = Math.max(1, Math.round(parseFloat($('in-size').value)||0));
+    if(!isFinite(price)){ $('note').textContent='Enter a numeric price.'; return; }
+    const before = spread();
+    if(side==='ask'){
+      asks.push([price,size]); asks.sort((a,b)=>a[0]-b[0]);
+    } else {
+      bids.push([price,size]); bids.sort((a,b)=>b[0]-a[0]);
+    }
+    const after = spread();
+    const who = side==='ask' ? 'seller' : 'buyer';
+    if(after!=null && after<0){
+      $('note').innerHTML = `<span class="down3">crossed book!</span> that ${who} would trade `
+        + `instantly — a real exchange would match it (L14/L16).`;
+    } else if(before!=null && after!=null && after<before-1e-9){
+      $('note').innerHTML = `spread tightened ${before.toFixed(2)} → <b>${after.toFixed(2)}</b> — the book got tighter.`;
+    } else if(before!=null && after!=null && after>before+1e-9){
+      $('note').innerHTML = `that ${who} is away from the top — depth grew, the spread is unchanged at the best.`;
+    } else {
+      $('note').innerHTML = `added a ${who}: ${size} @ ${price.toFixed(2)}.`;
+    }
+    render();
+  }
+
+  function lvl(price, size, cls, maxSize, best, tag){
+    const w = Math.max(6, (size/maxSize)*100);
+    const b = best ? ' best' : '';
+    return `<div class="lvl ${cls}${b}"><div class="bar" style="width:${w}%"></div>`
+      + `<span class="px">${price.toFixed(2)}</span>`
+      + `<span class="sz">x${size}</span>`
+      + `<span class="tag">${tag}</span></div>`;
+  }
+
+  function render(){
+    const maxSize = Math.max(1, ...bids.map(o=>o[1]), ...asks.map(o=>o[1]));
+    let html = '';
+    // asks: show worst (highest) at top, best (lowest) just above the spread
+    asks.slice().reverse().forEach((o,i,arr)=>{
+      const isBest = (i===arr.length-1);
+      html += lvl(o[0],o[1],'ask',maxSize,isBest, isBest?'← best ask':'');
+    });
+    const sp = spread(), md = mid();
+    const spTxt = sp==null ? '—' : sp.toFixed(2);
+    const mdTxt = md==null ? '—' : md.toFixed(3);
+    const spCls = (sp!=null && sp<0) ? 'down3' : '';
+    html += `<div class="midbar"><span><span class="lab">spread</span> `
+      + `<span class="${spCls}">${spTxt}</span></span>`
+      + `<span><span class="lab">mid</span> ${mdTxt}</span></div>`;
+    // bids: best (highest) just below the spread
+    bids.forEach((o,i)=>{
+      html += lvl(o[0],o[1],'bid',maxSize,i===0, i===0?'← best bid':'');
+    });
+    $('ladder').innerHTML = html;
+    const bb=bestBid(), ba=bestAsk();
+    $('s-bb').textContent  = bb==null?'—':bb.toFixed(2);
+    $('s-ba').textContent  = ba==null?'—':ba.toFixed(2);
+    $('s-sp').innerHTML    = sp==null?'—':`<span class="${spCls}">${sp.toFixed(2)}</span>`;
+    $('s-mid').textContent = md==null?'—':md.toFixed(3);
+  }
+
+  $('pick-bid').onclick = ()=>setSide('bid');
+  $('pick-ask').onclick = ()=>setSide('ask');
+  $('add').onclick = add;
+  $('reset').onclick = ()=>{ reset(); setSide('bid'); };
+
+  reset();
+  setSide('bid');
+})();
+</script>
+
+</body>
+</html>

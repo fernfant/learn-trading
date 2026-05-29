@@ -51,17 +51,17 @@ that *earns* the spread you paid in Track 1.
 
 | # | Concept | Code | Walkthrough |
 |---|---------|------|-------------|
-| 12 | From price-taker to price-maker — the bridge | `12_taker_to_maker.md` | _soon_ |
-| 13 | The order book — bids, asks, depth, the spread | [`../exchange.py`](../exchange.py) (seed) | _soon_ |
-| 14 | A market order eats the book | `14_market_order.py` | _soon_ |
-| 15 | A limit order rests — price-time priority | `15_limit_order.py` | _soon_ |
-| 16 | The matching engine loop — the heart of an exchange | `16_matching.py` | _soon_ |
-| 17 | Market data & the tape — top of book & depth | `17_market_data.py` | _soon_ |
-| 18 | A market maker — quote both sides, earn the spread | `18_market_maker.py` | _soon_ |
-| 19 | Inventory risk — skew your quotes | `19_inventory.py` | _soon_ |
-| 20 | Latency & the queue — why microseconds pay | `20_latency.py` | _soon_ |
-| 21 | Adverse selection — getting run over by informed flow | `21_adverse_selection.py` | _soon_ |
-| 22 | **Capstone:** a market maker that stays profitable *and* flat | `22_capstone.md` | _soon_ |
+| 12 | From price-taker to price-maker — the bridge | _(concept)_ | [`12_taker_to_maker.md`](12_taker_to_maker.md) ✅ |
+| 13 | The order book — bids, asks, depth, the spread | [`13_order_book.py`](13_order_book.py) | [`13_walkthrough.md`](13_walkthrough.md) ✅ |
+| 14 | A market order eats the book | [`14_market_order.py`](14_market_order.py) | [`14_walkthrough.md`](14_walkthrough.md) ✅ |
+| 15 | A limit order rests — price-time priority | [`15_limit_order.py`](15_limit_order.py) | [`15_walkthrough.md`](15_walkthrough.md) ✅ |
+| 16 | The matching engine loop — the heart of an exchange | [`16_matching.py`](16_matching.py) | [`16_walkthrough.md`](16_walkthrough.md) ✅ |
+| 17 | Market data & the tape — top of book & depth | [`17_market_data.py`](17_market_data.py) | [`17_walkthrough.md`](17_walkthrough.md) ✅ |
+| 18 | A market maker — quote both sides, earn the spread | [`18_market_maker.py`](18_market_maker.py) | [`18_walkthrough.md`](18_walkthrough.md) ✅ |
+| 19 | Inventory risk — skew your quotes | [`19_inventory.py`](19_inventory.py) | [`19_walkthrough.md`](19_walkthrough.md) ✅ |
+| 20 | Latency & the queue — why microseconds pay | [`20_latency.py`](20_latency.py) | [`20_walkthrough.md`](20_walkthrough.md) ✅ |
+| 21 | Adverse selection — getting run over by informed flow | [`21_adverse_selection.py`](21_adverse_selection.py) | [`21_walkthrough.md`](21_walkthrough.md) ✅ |
+| 22 | **Capstone:** a market maker that stays profitable *and* flat | [`22_capstone.py`](22_capstone.py) | [`22_capstone.md`](22_capstone.md) ✅ |
 
 ✅ = built · _soon_ = planned. Full mapping with references: [`index.md`](index.md).
 

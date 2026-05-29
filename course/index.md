@@ -39,17 +39,17 @@ the spread — the very role capital.com plays for its users.
 
 | # | Lesson | Adds to `exchange.py` | Idea | Primary reference |
 |---|--------|----------------------|------|-------------------|
-| 12 ◻︎ | From price-**taker** to price-**maker** (the bridge) | — (concept) | the spread flips from cost → revenue | Harris, *Trading & Exchanges* |
-| 13 ◻︎ | The order book (bids, asks, depth, spread) | `OrderBook`, `spread()` | the book is the market | Harris |
-| 14 ◻︎ | A market order eats the book (slippage, from the inside) | `match_market()` | walking the book | Harris |
-| 15 ◻︎ | A limit order rests (price-time priority, the queue) | `add_limit()` w/ priority | why your place in line matters | Harris |
-| 16 ◻︎ | The matching engine loop (crossed orders → trades) | `match()` core | the heart of an exchange | Hasbrouck, *Empirical Market Microstructure* |
-| 17 ◻︎ | Market data & the tape (top-of-book, depth, trades) | `snapshot()`, `tape` | what an HFT actually sees | Hasbrouck |
-| 18 ◻︎ | Be the market maker (quote both sides, earn the spread) | `quote()` bot | capital.com's business model | Cartea/Jaimungal/Penalva |
-| 19 ◻︎ | Inventory risk (skew your quotes) | skew by `inventory` | Avellaneda–Stoikov intuition | Avellaneda & Stoikov (2008) |
-| 20 ◻︎ | Latency & the queue (why microseconds pay) | per-order latency | co-location, speed races | Lewis, *Flash Boys* |
-| 21 ◻︎ | Adverse selection (toxic / informed flow runs you over) | informed traders in the sim | Glosten–Milgrom, Kyle | O'Hara, *Market Microstructure Theory* |
-| 22 ◻︎ | **Capstone:** a market maker that stays profitable **and** flat | full bot vs flow sim | the real HFT objective | Cartea et al. |
+| 12 ✅ | From price-**taker** to price-**maker** (the bridge) | — (concept) | the spread flips from cost → revenue | Harris, *Trading & Exchanges* |
+| 13 ✅ | The order book (bids, asks, depth, spread) | `OrderBook`, `spread()` | the book is the market | Harris |
+| 14 ✅ | A market order eats the book (slippage, from the inside) | `match_market()` | walking the book | Harris |
+| 15 ✅ | A limit order rests (price-time priority, the queue) | `add_limit()` w/ priority | why your place in line matters | Harris |
+| 16 ✅ | The matching engine loop (crossed orders → trades) | `match()` core | the heart of an exchange | Hasbrouck, *Empirical Market Microstructure* |
+| 17 ✅ | Market data & the tape (top-of-book, depth, trades) | `snapshot()`, `tape` | what an HFT actually sees | Hasbrouck |
+| 18 ✅ | Be the market maker (quote both sides, earn the spread) | `quote()` bot | capital.com's business model | Cartea/Jaimungal/Penalva |
+| 19 ✅ | Inventory risk (skew your quotes) | skew by `inventory` | Avellaneda–Stoikov intuition | Avellaneda & Stoikov (2008) |
+| 20 ✅ | Latency & the queue (why microseconds pay) | per-order latency | co-location, speed races | Lewis, *Flash Boys* |
+| 21 ✅ | Adverse selection (toxic / informed flow runs you over) | informed traders in the sim | Glosten–Milgrom, Kyle | O'Hara, *Market Microstructure Theory* |
+| 22 ✅ | **Capstone:** a market maker that stays profitable **and** flat | full bot vs flow sim | the real HFT objective | Cartea et al. |
 
 ---
 

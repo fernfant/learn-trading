@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>L17 · Market data &amp; the tape — Learn to Trade</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .term{display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap}
+  .col{flex:1;min-width:280px}
+  .col h4{margin:0 0 8px;font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--dim)}
+  /* depth ladder */
+  .ladder{font-family:ui-monospace,monospace;font-size:13px;background:var(--code-bg);
+    border:1px solid var(--line);border-radius:10px;padding:8px;min-height:300px}
+  .lvl{position:relative;display:flex;justify-content:space-between;align-items:center;
+    padding:3px 8px;border-radius:5px;overflow:hidden}
+  .lvl .bar{position:absolute;top:0;bottom:0;right:0;opacity:.22;border-radius:5px}
+  .lvl.ask .bar{background:var(--down);left:auto;right:0}
+  .lvl.bid .bar{background:var(--up);left:0;right:auto}
+  .lvl .px{position:relative;z-index:1}
+  .lvl.ask .px{color:var(--down2)} .lvl.bid .px{color:var(--up2)}
+  .lvl .sz{position:relative;z-index:1;color:var(--ink);font-weight:600}
+  .lvl.best .px{font-weight:800}
+  .midbar{display:flex;justify-content:space-between;align-items:center;
+    font-family:ui-monospace,monospace;font-size:12px;color:var(--accent);
+    border-top:1px dashed var(--accent);border-bottom:1px dashed var(--accent);
+    margin:5px 0;padding:5px 8px}
+  /* tape */
+  .tape{font-family:ui-monospace,monospace;font-size:13px;background:var(--code-bg);
+    border:1px solid var(--line);border-radius:10px;padding:8px;height:316px;overflow:hidden;
+    display:flex;flex-direction:column-reverse}
+  .print{display:flex;justify-content:space-between;padding:3px 8px;border-radius:5px}
+  .print.buy{color:var(--up2)} .print.sell{color:var(--down2)}
+  .print.fresh{animation:flash .5s ease-out}
+  @keyframes flash{from{background:#ffffff22}to{background:transparent}}
+  .print .side{font-weight:700}
+  /* live signals */
+  .sig{display:flex;gap:14px;flex-wrap:wrap;margin:6px 0 2px}
+  .sigbox{flex:1;min-width:120px;background:var(--panel2);border:1px solid var(--line);
+    border-radius:10px;padding:10px 12px;font-family:ui-monospace,monospace}
+  .sigbox .lbl{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.04em}
+  .sigbox .val{font-size:22px;font-weight:800;margin-top:2px}
+  .up3{color:var(--up2)} .down3{color:var(--down2)}
+  /* imbalance meter */
+  .meter{height:14px;border-radius:999px;background:var(--down);overflow:hidden;margin-top:6px;
+    border:1px solid var(--line)}
+  .meter .fill{height:100%;background:var(--up);transition:width .25s}
+  .meterlbl{display:flex;justify-content:space-between;font-family:ui-monospace,monospace;
+    font-size:11px;color:var(--dim);margin-top:4px}
+  .note{font-family:ui-monospace,monospace;font-size:13px;min-height:20px;margin-top:8px;color:var(--dim)}
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <a href="index.html" class="brand">📈 Learn to Trade</a>
+  <div class="lesson-pills">
+    <a href="index.html">Index</a>
+    <a class="t1" href="index.html#track1">T1</a>
+    <a class="t2" href="lesson_12.html">L12</a>
+    <a class="t2" href="lesson_13.html">L13</a>
+    <a class="t2" href="lesson_14.html">L14</a>
+    <a class="t2" href="lesson_15.html">L15</a>
+    <a class="t2" href="lesson_16.html">L16</a>
+    <a class="t2 current" href="lesson_17.html">L17</a>
+    <a class="t2" href="lesson_18.html">L18</a>
+    <a class="t2" href="lesson_19.html">L19</a>
+    <a class="t2" href="lesson_20.html">L20</a>
+    <a class="t2" href="lesson_21.html">L21</a>
+    <a class="t2" href="lesson_22.html">L22🏆</a>
+  </div>
+</nav>
+
+<div class="wrap">
+
+<h1>Lesson 17 · Market data &amp; the tape — what an HFT actually sees</h1>
+<p class="subtitle">You built the matching engine. Now: what does a trader actually <em>look</em> at?
+Two feeds stream out of the exchange. The <strong>book feed</strong> (the <em>depth</em>) is a snapshot of
+resting liquidity — best bid &amp; ask plus the sizes stacked behind them. The <strong>trade feed</strong>
+(the <em>tape</em>) is the running list of trades that actually executed, each tagged with the
+<em>aggressor</em>. The book is a photograph of intentions; the tape is a recording of events.</p>
+
+<div class="demo">
+  <h3>🖥️ Live trading terminal</h3>
+  <p class="subtitle" style="margin:4px 0 12px">Press <b>Step flow</b> to push one order through the
+  engine, or <b>Auto</b> to stream it. Trades print to the <b style="color:var(--down2)">tape</b> on the
+  right; the <b>depth ladder</b> on the left updates as levels get eaten and refilled. Watch
+  <b style="color:var(--accent)">mid</b> and the <b>order-book imbalance</b> move live. This screen is,
+  almost exactly, what an HFT sees.</p>
+
+  <div class="sig">
+    <div class="sigbox"><div class="lbl">mid</div><div class="val" id="s-mid">100.000</div></div>
+    <div class="sigbox"><div class="lbl">spread</div><div class="val" id="s-spread">0.04</div></div>
+    <div class="sigbox"><div class="lbl">last trade</div><div class="val" id="s-last">—</div></div>
+    <div class="sigbox">
+      <div class="lbl">imbalance (bid share)</div>
+      <div class="val" id="s-imb">0.56</div>
+      <div class="meter"><div class="fill" id="s-imbfill" style="width:56%"></div></div>
+      <div class="meterlbl"><span>sellers deeper</span><span>buyers deeper</span></div>
+    </div>
+  </div>
+
+  <div class="term">
+    <div class="col">
+      <h4>Depth ladder (the book feed)</h4>
+      <div class="ladder" id="ladder"></div>
+    </div>
+    <div class="col">
+      <h4>The tape (the trade feed)</h4>
+      <div class="tape" id="tape"></div>
+    </div>
+  </div>
+
+  <div class="note" id="note">Resting liquidity is set; nothing has traded yet — the tape is empty.</div>
+
+  <div class="btnrow">
+    <button id="step">▶ Step flow</button>
+    <button id="auto">⏩ Auto</button>
+    <button class="up" id="buy">▲ Force a BUY</button>
+    <button class="down" id="sell">▼ Force a SELL</button>
+    <button id="reset">↻ Reset book</button>
+  </div>
+</div>
+
+<div class="callout info">
+  💡 <strong>The aggressor tag is the gold on the tape.</strong> Every print is colored by who crossed the
+  spread to make it happen — <span class="up3">green = a buyer lifted the ask</span>,
+  <span class="down3">red = a seller hit the bid</span>. Tally a run of green prints and you've <em>inferred</em>
+  buying pressure — nobody labeled it for you. That inference, plus the live depth imbalance, is the raw input
+  to every trading decision.
+</div>
+
+<div class="callout warn">
+  <strong>Depth is intentions, not promises.</strong> Resting orders on the ladder can be cancelled in a
+  microsecond — a fat bid you're leaning on may vanish the instant real selling arrives. The tape, by contrast,
+  is trades that already happened: it can't be un-printed. When the two disagree (deep book, but the tape keeps
+  trading <em>through</em> it), trust the tape.
+</div>
+
+<div class="recap">
+  <div class="r-title">✅ You can now say…</div>
+  <ul>
+    <li>An exchange publishes two feeds: the <strong>book / depth</strong> (resting liquidity, a snapshot) and the <strong>tape</strong> (executed trades, a stream).</li>
+    <li><strong>Top-of-book</strong> = best bid &amp; ask + their sizes; <strong>depth</strong> = the sizes stacked at each level behind them.</li>
+    <li>Each tape print carries an <strong>aggressor</strong> side — the impatient party who crossed the spread. Tallying it lets you read buying vs selling pressure.</li>
+    <li>Derived signals: <code>mid = (bid+ask)/2</code> and <code>imbalance = bid_size/(bid_size+ask_size)</code> — the first numbers any trader's eye reads.</li>
+    <li>In <code>exchange.py</code> these are <code>snapshot()</code> and the <code>tape</code> — the window every later market-maker watches.</li>
+  </ul>
+</div>
+
+<p style="margin-top:24px">
+  <a href="lesson_16.html">← L16: The matching engine loop</a> &nbsp;·&nbsp;
+  <a href="lesson_18.html"><strong>L18: Be the market maker — quote both sides, earn the spread →</strong></a>
+</p>
+
+</div>
+
+<footer class="site">
+  Built by <a href="https://github.com/fernfant">@fernfant</a> ·
+  <a href="https://github.com/fernfant/learn-trading">source on GitHub</a> · MIT licensed
+</footer>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const LEVELS = 4;          // depth levels shown per side
+  let bids, asks, tape, raf=null, firstTradePx=null;
+
+  // a fresh book: (price, size), bids high->low, asks low->high
+  function freshBook(){
+    bids = [[99.98,5],[99.97,2],[99.95,8],[99.93,6]];
+    asks = [[100.02,4],[100.03,6],[100.05,3],[100.07,7]];
+    tape = []; firstTradePx=null;
+  }
+  const bestBid = () => bids.length ? bids[0][0] : null;
+  const bestAsk = () => asks.length ? asks[0][0] : null;
+  const mid = () => (bestBid()+bestAsk())/2;
+  const topSizes = () => [bids.length?bids[0][1]:0, asks.length?asks[0][1]:0];
+  function imbalance(){ const [b,a]=topSizes(); return (b+a)?b/(b+a):0.5; }
+
+  // an incoming market order aggresses the book and prints to the tape
+  function aggress(side, size){
+    let remaining = size;
+    const levels = side==='buy' ? asks : bids;
+    while(remaining>0 && levels.length){
+      let [price, avail] = levels[0];
+      const take = Math.min(remaining, avail);
+      tape.push({price, size:take, side});
+      if(firstTradePx===null) firstTradePx = price;
+      remaining -= take;
+      if(take < avail) levels[0][1] = avail - take; else levels.shift();
+    }
+    // top up the far side a little so the book never fully drains (a real venue
+    // constantly gets fresh resting orders); keeps the ladder lively.
+    refill();
+    return size - remaining;
+  }
+  // occasionally restock thinning levels with new resting liquidity
+  function refill(){
+    if(asks.length < LEVELS){
+      const top = asks.length ? asks[asks.length-1][0] : mid()+0.02;
+      asks.push([+(top+0.02).toFixed(2), 3+Math.floor(Math.random()*6)]);
+    }
+    if(bids.length < LEVELS){
+      const bot = bids.length ? bids[bids.length-1][0] : mid()-0.02;
+      bids.push([+(bot-0.02).toFixed(2), 3+Math.floor(Math.random()*6)]);
+    }
+    // small random replenishment at the best levels
+    if(Math.random()<0.5 && asks.length) asks[0][1] += Math.floor(Math.random()*3);
+    if(Math.random()<0.5 && bids.length) bids[0][1] += Math.floor(Math.random()*3);
+  }
+
+  // one step of simulated flow: mostly balanced, slight buy lean by default
+  function stepFlow(){
+    const side = Math.random() < 0.55 ? 'buy' : 'sell';
+    const size = 1 + Math.floor(Math.random()*4);
+    aggress(side, size);
+    render(true);
+  }
+
+  function maxSize(){
+    let m = 1;
+    bids.slice(0,LEVELS).forEach(l=>m=Math.max(m,l[1]));
+    asks.slice(0,LEVELS).forEach(l=>m=Math.max(m,l[1]));
+    return m;
+  }
+
+  function render(fresh){
+    const m = maxSize();
+    // ladder: asks worst-first on top, then mid bar, then bids best-first
+    let html='';
+    asks.slice(0,LEVELS).reverse().forEach((l,i,arr)=>{
+      const best = i===arr.length-1;
+      html += `<div class="lvl ask${best?' best':''}"><span class="bar" style="width:${100*l[1]/m}%"></span>`
+        + `<span class="px">${l[0].toFixed(2)}</span><span class="sz">x${l[1]}</span></div>`;
+    });
+    html += `<div class="midbar"><span>mid ${mid().toFixed(3)}</span>`
+      + `<span>spread ${(bestAsk()-bestBid()).toFixed(2)}</span></div>`;
+    bids.slice(0,LEVELS).forEach((l,i)=>{
+      html += `<div class="lvl bid${i===0?' best':''}"><span class="bar" style="width:${100*l[1]/m}%"></span>`
+        + `<span class="px">${l[0].toFixed(2)}</span><span class="sz">x${l[1]}</span></div>`;
+    });
+    $('ladder').innerHTML = html;
+
+    // tape: column-reverse means newest sits at the top; render oldest..newest
+    const recent = tape.slice(-12);
+    $('tape').innerHTML = recent.map((t,i)=>{
+      const isNew = fresh && i===recent.length-1;
+      const arrow = t.side==='buy' ? 'BUY ▲' : 'SELL ▼';
+      return `<div class="print ${t.side}${isNew?' fresh':''}">`
+        + `<span class="side">${arrow}</span><span>${t.size} @ ${t.price.toFixed(2)}</span></div>`;
+    }).join('') || `<div class="print" style="color:var(--dim)">— no trades yet —</div>`;
+
+    // signals
+    $('s-mid').textContent = mid().toFixed(3);
+    $('s-spread').textContent = (bestAsk()-bestBid()).toFixed(2);
+    const imb = imbalance();
+    $('s-imb').textContent = imb.toFixed(2);
+    $('s-imb').className = 'val ' + (imb>0.5?'up3':imb<0.5?'down3':'');
+    $('s-imbfill').style.width = (100*imb).toFixed(0)+'%';
+    if(tape.length){
+      const last = tape[tape.length-1];
+      $('s-last').textContent = last.price.toFixed(2);
+      $('s-last').className = 'val ' + (last.side==='buy'?'up3':'down3');
+    } else {
+      $('s-last').textContent = '—'; $('s-last').className='val';
+    }
+
+    // running pressure note
+    if(tape.length){
+      const buyV = tape.reduce((s,t)=>s+(t.side==='buy'?t.size:0),0);
+      const sellV = tape.reduce((s,t)=>s+(t.side==='sell'?t.size:0),0);
+      const net = buyV - sellV;
+      const walk = (tape[tape.length-1].price - firstTradePx);
+      const press = net>0 ? '<span class="up3">buying pressure</span>'
+                  : net<0 ? '<span class="down3">selling pressure</span>' : 'balanced flow';
+      $('note').innerHTML = `tape so far: buy ${buyV} vs sell ${sellV} → net ${net>=0?'+':''}${net} (${press}); `
+        + `price walked ${walk>=0?'+':''}${walk.toFixed(2)} since the first print.`;
+    } else {
+      $('note').textContent = 'Resting liquidity is set; nothing has traded yet — the tape is empty.';
+    }
+  }
+
+  function setAuto(on){
+    if(on){
+      if(raf) return;
+      const loop=()=>{ stepFlow(); raf=setTimeout(()=>requestAnimationFrame(loop), 550); };
+      loop(); $('auto').textContent='⏸ Pause';
+    } else {
+      if(raf){ clearTimeout(raf); raf=null; } $('auto').textContent='⏩ Auto';
+    }
+  }
+
+  $('step').onclick = ()=>stepFlow();
+  $('buy').onclick  = ()=>{ aggress('buy', 2+Math.floor(Math.random()*4)); render(true); };
+  $('sell').onclick = ()=>{ aggress('sell', 2+Math.floor(Math.random()*4)); render(true); };
+  $('auto').onclick = ()=>setAuto(!raf);
+  $('reset').onclick = ()=>{ setAuto(false); freshBook(); render(false); };
+
+  freshBook(); render(false);
+})();
+</script>
+
+</body>
+</html>

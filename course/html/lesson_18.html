@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>L18 · Be the market maker — Learn to Trade</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .wkrow{display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap}
+  .wkrow canvas{flex:1.5;min-width:340px}
+  .ctrls{flex:1;min-width:268px}
+  .acct{font-family:ui-monospace,monospace;line-height:1.6;margin:6px 0 2px}
+  .acct .row{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--line)}
+  .acct .row span:first-child{color:var(--dim)}
+  .acct .row b{color:var(--ink)}
+  .pnlbig{font-size:30px;font-weight:800;font-family:ui-monospace,monospace;margin:8px 0 2px}
+  .up3{color:var(--up2);font-weight:700} .down3{color:var(--down2);font-weight:700}
+  .quote{display:flex;gap:10px;margin:8px 0 2px;font-family:ui-monospace,monospace;font-size:14px}
+  .quote .q{flex:1;border:1px solid var(--line);border-radius:9px;padding:7px 10px;text-align:center}
+  .quote .bid{border-color:#1f5e4a;background:#13241d33}
+  .quote .ask{border-color:#6e2b2e;background:#23151633}
+  .quote .lab{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.04em}
+  .quote .bid .px{color:var(--up2);font-weight:700;font-size:17px}
+  .quote .ask .px{color:var(--down2);font-weight:700;font-size:17px}
+  .invbar{height:14px;border-radius:7px;background:var(--panel2);border:1px solid var(--line);
+    position:relative;margin:4px 0 2px;overflow:hidden}
+  .invbar .fill{position:absolute;top:0;bottom:0;left:50%;width:0;background:var(--accent);transition:all .12s}
+  .invbar .mid{position:absolute;top:-2px;bottom:-2px;left:50%;width:1px;background:var(--dim)}
+  .slider{margin:14px 0 4px}
+  .slider label{display:flex;justify-content:space-between;font-family:ui-monospace,monospace;
+    font-size:13px;color:var(--dim);margin-bottom:6px}
+  .slider label b{color:var(--accent)}
+  input[type=range]{width:100%;accent-color:var(--accent)}
+  .note{font-family:ui-monospace,monospace;font-size:13px;min-height:34px;margin-top:6px;color:var(--dim)}
+  .hint{font-family:ui-monospace,monospace;font-size:12px;color:#7d8895;margin-top:2px}
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <a href="index.html" class="brand">📈 Learn to Trade</a>
+  <div class="lesson-pills">
+    <a href="index.html">Index</a>
+    <a class="t1" href="index.html#track1">T1</a>
+    <a class="t2" href="lesson_12.html">L12</a>
+    <a class="t2" href="lesson_13.html">L13</a>
+    <a class="t2" href="lesson_14.html">L14</a>
+    <a class="t2" href="lesson_15.html">L15</a>
+    <a class="t2" href="lesson_16.html">L16</a>
+    <a class="t2" href="lesson_17.html">L17</a>
+    <a class="t2 current" href="lesson_18.html">L18</a>
+    <a class="t2" href="lesson_19.html">L19</a>
+    <a class="t2" href="lesson_20.html">L20</a>
+    <a class="t2" href="lesson_21.html">L21</a>
+    <a class="t2" href="lesson_22.html">L22🏆</a>
+  </div>
+</nav>
+
+<div class="wrap">
+
+<h1>Lesson 18 · Be the market maker — quote both sides, earn the spread</h1>
+<p class="subtitle">The payoff of Track 2. You don't predict direction. You post a
+<b style="color:var(--up2)">bid</b> a little below fair value and an <b style="color:var(--down2)">ask</b>
+a little above, and you <em>wait</em>. A buyer lifts your ask, a seller hits your bid — you bought low,
+sold high, and pocketed the <strong>spread</strong>. The very spread you <em>paid</em> as a customer in
+Track 1, now <em>earned</em>. The catch: it only works while buys and sells balance.</p>
+
+<div class="demo">
+  <h3>🏦 The market-maker dashboard</h3>
+  <p class="subtitle" style="margin:4px 0 12px">Fair value wanders (the gold line). Your quotes straddle it.
+  Random flow arrives and <b>hits one side</b> — watch the fill flash, the <b style="color:var(--accent)">P&amp;L</b>
+  tick up, and the <b>inventory</b> bar wobble. Then flip to <b>one-sided flow</b> and watch the lurking risk bite.</p>
+  <div class="wkrow">
+    <canvas id="chart" width="900" height="260"></canvas>
+    <div class="ctrls">
+      <div class="quote">
+        <div class="q bid"><div class="lab">bid · we buy</div><div class="px" id="q-bid">99.95</div></div>
+        <div class="q ask"><div class="lab">ask · we sell</div><div class="px" id="q-ask">100.05</div></div>
+      </div>
+      <div class="pnlbig" id="a-pnl">$0.00</div>
+      <div class="hint">marked P&amp;L = cash + inventory × fair</div>
+      <div class="acct">
+        <div class="row"><span>fills</span><b id="a-fills">0</b></div>
+        <div class="row"><span>cash</span><b id="a-cash">$0.00</b></div>
+        <div class="row"><span>inventory</span><b id="a-inv">0</b></div>
+      </div>
+      <div class="invbar"><div class="mid"></div><div class="fill" id="a-invbar"></div></div>
+      <div class="hint" id="a-invlabel">flat — no position, just the fee</div>
+      <div class="slider">
+        <label>half-spread <b><span id="s-val">0.05</span></b> · full spread <span id="s-full">0.10</span></label>
+        <input type="range" id="s-half" min="1" max="20" value="5">
+      </div>
+      <div class="note" id="a-note"></div>
+      <div class="btnrow">
+        <button id="run" class="up">▶ Balanced flow</button>
+        <button id="toxic" class="down">☠ One-sided flow</button>
+        <button id="step">▶ One fill</button>
+        <button id="reset">↻ Reset</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="callout info">
+  💡 <strong>You captured the spread without an opinion.</strong> Under balanced flow your P&amp;L climbs at
+  about <em>half a spread per fill</em> — buy at the bid, sell at the ask, repeat. Notice <code>cash</code> swings
+  wildly and even goes negative; ignore it. Only <code>cash + inventory × fair</code> tells the truth, exactly like
+  equity back in Lesson 4.
+</div>
+
+<div class="callout warn">
+  <strong>Inventory is the lurking risk.</strong> Hit <b>One-sided flow</b>: every taker buys, so you keep
+  <em>selling</em>, your inventory marches negative (short), and the buying drags fair value <em>up</em> — against you.
+  You earned the spread on every fill, yet your marked P&amp;L bleeds red. Taming that is
+  <strong>inventory skew (L19)</strong>; the informed flow that does it on purpose is <strong>adverse selection (L21)</strong>.
+</div>
+
+<div class="recap">
+  <div class="r-title">✅ You can now say…</div>
+  <ul>
+    <li>A <strong>market maker</strong> posts <code>bid = fair − h</code> and <code>ask = fair + h</code> and waits — no direction call.</li>
+    <li>A buyer lifts your ask (you <strong>sell</strong>); a seller hits your bid (you <strong>buy</strong>) — you always take the <em>opposite</em> side.</li>
+    <li>Over <strong>balanced</strong> flow you bank ~the spread per round trip; the cost you paid in Track 1 is now revenue.</li>
+    <li>Honest P&amp;L = <code>cash + inventory × fair</code>; cash alone lies.</li>
+    <li><strong>One-sided flow</strong> leaves you holding inventory at risk — the wound L19 and L21 treat.</li>
+  </ul>
+</div>
+
+<p style="margin-top:24px">
+  <a href="lesson_17.html">← L17: Market data &amp; the tape</a> &nbsp;·&nbsp;
+  <a href="lesson_19.html"><strong>L19: Inventory risk — skew your quotes →</strong></a>
+</p>
+
+</div>
+
+<footer class="site">
+  Built by <a href="https://github.com/fernfant">@fernfant</a> ·
+  <a href="https://github.com/fernfant/learn-trading">source on GitHub</a> · MIT licensed
+</footer>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const START_FAIR = 100, MAXPTS = 90, INV_SCALE = 12;
+  function gauss(){ let u=0,v=0; while(!u)u=Math.random(); while(!v)v=Math.random();
+    return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+
+  const cv = $('chart'), ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height, PAD = 34;
+  let h, fair, cash, inventory, fills, fairHist, flash, timer=null, flashRaf=null, mode=null;
+
+  const bid = () => fair - h;
+  const ask = () => fair + h;
+  const pnl = () => cash + inventory * fair;
+
+  function stop(){
+    if(timer){clearTimeout(timer);timer=null;}
+    if(flashRaf){cancelAnimationFrame(flashRaf);flashRaf=null;}
+    mode=null;
+  }
+
+  function reset(){
+    stop();
+    fair=START_FAIR; cash=0; inventory=0; fills=0;
+    fairHist=[{f:fair,b:bid(),a:ask(),hit:null}];
+    flash=null;
+    $('a-note').textContent='';
+    draw(); paint();
+  }
+
+  // one taker arrives. `forceBuy`: null = random 50/50, true = buyer, false = seller.
+  function fill(forceBuy){
+    const isBuy = forceBuy===null ? Math.random()<0.5 : forceBuy;
+    if(isBuy){
+      cash += ask(); inventory -= 1;            // buyer lifts ask -> we SELL
+    } else {
+      cash -= bid(); inventory += 1;            // seller hits bid -> we BUY
+    }
+    fills++;
+    flash = {side:isBuy?'ask':'bid', age:0};
+    // fair wanders; one-sided buying drifts it up, one-sided selling drifts it down
+    if(mode==='toxic') fair += 0.03;
+    else fair += gauss()*0.02;
+    fairHist.push({f:fair,b:bid(),a:ask(),hit:isBuy?'ask':'bid'});
+    if(fairHist.length>MAXPTS) fairHist.shift();
+    draw(); paint();
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    const vals=[];
+    fairHist.forEach(p=>{ vals.push(p.b,p.a); });
+    let lo=Math.min(...vals), hi=Math.max(...vals);
+    if(hi-lo < 0.5){ const c=(hi+lo)/2; lo=c-0.25; hi=c+0.25; }
+    const pad=(hi-lo)*0.18; lo-=pad; hi+=pad;
+    const n=fairHist.length;
+    const x = i => PAD + (n<2?0:i*(W-2*PAD)/(MAXPTS-1));
+    const y = v => PAD + (1-(v-lo)/(hi-lo))*(H-2*PAD);
+
+    // ask line (red, above) and bid line (green, below)
+    const drawLine=(key,color)=>{
+      ctx.strokeStyle=color; ctx.lineWidth=1.5; ctx.beginPath();
+      fairHist.forEach((p,i)=>{ i?ctx.lineTo(x(i),y(p[key])):ctx.moveTo(x(i),y(p[key])); });
+      ctx.stroke();
+    };
+    drawLine('a','#f87171');
+    drawLine('b','#34d399');
+    // fair value (dashed gold) between them
+    ctx.strokeStyle='#f0b429'; ctx.setLineDash([5,4]); ctx.lineWidth=1.5; ctx.beginPath();
+    fairHist.forEach((p,i)=>{ i?ctx.lineTo(x(i),y(p.f)):ctx.moveTo(x(i),y(p.f)); });
+    ctx.stroke(); ctx.setLineDash([]);
+
+    // fill markers: a dot where flow hit a quote
+    fairHist.forEach((p,i)=>{
+      if(!p.hit) return;
+      const v = p.hit==='ask' ? p.a : p.b;
+      ctx.fillStyle = p.hit==='ask' ? '#f87171' : '#34d399';
+      ctx.globalAlpha = 0.5;
+      ctx.beginPath(); ctx.arc(x(i),y(v),3,0,7); ctx.fill();
+      ctx.globalAlpha = 1;
+    });
+
+    // latest quotes: labelled dots at the right edge
+    const last=fairHist[n-1], xe=x(n-1);
+    ctx.font='11px ui-monospace,monospace'; ctx.textAlign='right';
+    ctx.fillStyle='#f87171'; ctx.beginPath(); ctx.arc(xe,y(last.a),3.5,0,7); ctx.fill();
+    ctx.fillText('ask', xe-8, y(last.a)+4);
+    ctx.fillStyle='#34d399'; ctx.beginPath(); ctx.arc(xe,y(last.b),3.5,0,7); ctx.fill();
+    ctx.fillText('bid', xe-8, y(last.b)+4);
+    ctx.fillStyle='#f0b429'; ctx.fillText('fair', xe-8, y(last.f)-6);
+
+    // flash a ring on the just-hit side
+    if(flash && flash.age<6){
+      const v = flash.side==='ask' ? last.a : last.b;
+      ctx.strokeStyle = flash.side==='ask' ? '#f87171' : '#34d399';
+      ctx.lineWidth=2; ctx.globalAlpha=1-flash.age/6;
+      ctx.beginPath(); ctx.arc(xe,y(v),6+flash.age*2,0,7); ctx.stroke();
+      ctx.globalAlpha=1; flash.age++;
+      // keep the ring animating only when flow isn't already driving redraws
+      if(!timer){ if(flashRaf) cancelAnimationFrame(flashRaf); flashRaf=requestAnimationFrame(()=>draw()); }
+    }
+  }
+
+  function paint(){
+    $('q-bid').textContent = bid().toFixed(2);
+    $('q-ask').textContent = ask().toFixed(2);
+    $('a-fills').textContent = fills;
+    $('a-cash').textContent = (cash<0?'-$':'$') + Math.abs(cash).toFixed(2);
+    $('a-inv').textContent = (inventory>0?'+':'') + inventory;
+    $('a-inv').className = inventory>0?'up3':inventory<0?'down3':'';
+    const p = pnl();
+    $('a-pnl').textContent = (p<0?'-$':'$') + Math.abs(p).toFixed(2);
+    $('a-pnl').className = 'pnlbig ' + (p>0.005?'up3':p<-0.005?'down3':'');
+    // inventory bar grows from the centre; right = long (green), left = short (red)
+    const bar=$('a-invbar');
+    const frac = Math.max(-1, Math.min(1, inventory/INV_SCALE));
+    const wpct = Math.abs(frac)*50;
+    bar.style.width = wpct+'%';
+    if(frac>=0){ bar.style.left='50%'; bar.style.background='var(--up)'; }
+    else { bar.style.left=(50-wpct)+'%'; bar.style.background='var(--down)'; }
+    $('a-invlabel').textContent = inventory===0 ? 'flat — no position, just the fee'
+      : inventory>0 ? `long ${inventory} — bought more than sold`
+      : `short ${Math.abs(inventory)} — sold more than bought`;
+  }
+
+  function tick(forceBuy){
+    fill(forceBuy);
+    timer = setTimeout(()=>tick(forceBuy), 110);
+  }
+  function startMode(m, forceBuy, msg){
+    if(timer){ stop(); $('a-note').textContent=''; return; }   // toggle off if already running
+    if(flashRaf){cancelAnimationFrame(flashRaf);flashRaf=null;}
+    mode=m; $('a-note').textContent=msg; tick(forceBuy);
+  }
+
+  $('run').onclick=()=>startMode('balanced', null,
+    'balanced flow: buys and sells roughly cancel, inventory stays near flat, P&L climbs.');
+  $('toxic').onclick=()=>startMode('toxic', true,
+    'one-sided flow: every taker BUYS, so you keep selling -> short, into a rising fair. P&L bleeds.');
+  $('step').onclick=()=>{ const m=mode; stop(); mode=m||'balanced'; fill(mode==='toxic'?true:null); };
+  $('reset').onclick=reset;
+
+  $('s-half').oninput=e=>{
+    h = (+e.target.value)/100;
+    $('s-val').textContent = h.toFixed(2);
+    $('s-full').textContent = (2*h).toFixed(2);
+    // re-quote around current fair without disturbing position
+    if(fairHist.length){ const last=fairHist[fairHist.length-1]; last.b=bid(); last.a=ask(); }
+    draw(); paint();
+  };
+
+  h = (+$('s-half').value)/100;
+  $('s-val').textContent = h.toFixed(2);
+  $('s-full').textContent = (2*h).toFixed(2);
+  reset();
+})();
+</script>
+
+</body>
+</html>
