@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>L0 · Foundations — Learn to Trade</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .wkrow{display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap}
+  .wkrow canvas{flex:1.4;min-width:320px}
+  .ctrls{flex:1;min-width:250px}
+  .stat{font-family:ui-monospace,monospace;line-height:1.9;margin:6px 0}
+  .stat b{color:var(--ink)}
+  .up3{color:var(--up2);font-weight:700} .down3{color:var(--down2);font-weight:700}
+  .big{font-size:30px;font-weight:800;font-family:ui-monospace,monospace;margin:6px 0 2px}
+  .pickrow{display:flex;gap:10px;margin-bottom:8px}
+  .pickrow button{flex:1}
+  .note{font-family:ui-monospace,monospace;font-size:13px;min-height:20px;margin-top:4px;color:var(--dim)}
+  .toggle{display:flex;align-items:center;gap:10px;margin:10px 0 6px;font-family:ui-monospace,monospace;font-size:14px}
+  .toggle .sw{width:46px;height:24px;border-radius:999px;background:var(--panel2);border:1px solid var(--line);
+    position:relative;cursor:pointer;transition:background .15s}
+  .toggle .sw::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;
+    background:var(--dim);transition:left .15s,background .15s}
+  .toggle.on .sw{background:var(--up)} .toggle.on .sw::after{left:24px;background:#03130d}
+  .twoway{display:flex;justify-content:space-between;font-family:ui-monospace,monospace;font-size:13px;
+    color:var(--dim);margin-top:8px}
+  .twoway b{color:var(--ink)}
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <a href="index.html" class="brand">📈 Learn to Trade</a>
+  <div class="lesson-pills">
+    <a href="index.html">Index</a>
+    <a class="t1 current" href="lesson_00.html">L0</a>
+    <a class="t1" href="lesson_01.html">L1</a>
+    <a class="t1" href="lesson_02.html">L2</a>
+    <a class="t1" href="lesson_03.html">L3</a>
+    <a class="t1" href="lesson_04.html">L4</a>
+    <a class="t2" href="index.html#track2">T2</a>
+  </div>
+</nav>
+
+<div class="wrap">
+
+<h1>Lesson 0 · Foundations — what are we even trading?</h1>
+<p class="subtitle">The only lesson with no code. Before you bet a cent, three questions:
+<em>what is this thing, where does its price come from, and what game am I playing?</em>
+An asset has a <strong>value</strong> (what it's worth) and a <strong>price</strong> (the last number
+two people traded at) — and those are <em>not</em> the same thing. The whole course lives in that gap.</p>
+
+<div class="demo">
+  <h3>⚖️ Where a price comes from: supply meets demand</h3>
+  <p class="subtitle" style="margin:4px 0 12px">Nobody announces the price — it <em>emerges</em>. Buyers post
+  the most they'll <b style="color:var(--up2)">pay</b> (demand); sellers post the least they'll
+  <b style="color:var(--down2)">accept</b> (supply). The price is where the two curves cross. Add eager
+  buyers or sellers and watch it move.</p>
+  <div class="wkrow">
+    <canvas id="sd" width="900" height="240"></canvas>
+    <div class="ctrls">
+      <div class="pickrow">
+        <button class="up" id="add-buy">＋ Eager buyer</button>
+        <button class="down" id="add-sell">＋ Eager seller</button>
+      </div>
+      <div class="big" id="sd-price">$100.00</div>
+      <div class="stat" id="sd-detail">balanced market · 12 buyers, 12 sellers</div>
+      <div class="note" id="sd-note">More buyers than sellers pushes the price up. That tug-of-war <em>is</em> the price.</div>
+      <div class="btnrow">
+        <button id="sd-reset">↻ Balanced market</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="callout info">
+  💡 That list of every bid and ask has a name: the <strong>order book</strong>. In <strong>Track 2</strong>
+  you'll <em>build</em> it (Lesson 13). The single price you trade against in Track 1 is just the top of a book
+  someone else is running.
+</div>
+
+<div class="demo">
+  <h3>🎯 Value vs price: two different jobs</h3>
+  <p class="subtitle" style="margin:4px 0 12px">The dashed gold line is the asset's true <b style="color:var(--accent)">value</b>.
+  The solid line is its <b>price</b>, which wanders. Flip <b>informed traders</b> on and watch the price get tugged
+  back toward value; flip them off and it drifts off on its own. Push the value with news.</p>
+  <div class="wkrow">
+    <canvas id="vp" width="900" height="240"></canvas>
+    <div class="ctrls">
+      <div class="pickrow">
+        <button class="up" id="good">📰 Good news</button>
+        <button class="down" id="bad">📰 Bad news</button>
+      </div>
+      <div class="toggle on" id="inf-toggle"><div class="sw"></div><span id="inf-label">informed traders: ON</span></div>
+      <div class="stat">
+        value <b id="vp-value">$100.00</b><br>
+        price <b id="vp-price">$100.00</b><br>
+        gap <span id="vp-gap">$0.00</span>
+      </div>
+      <div class="btnrow">
+        <button id="vp-run">⏩ Run 60 days</button>
+        <button id="vp-step">▶ Next day</button>
+        <button id="vp-reset">↻ Reset</button>
+      </div>
+    </div>
+  </div>
+  <div class="twoway">
+    <span>🏦 <b>Investor</b> watches the gap: buy when price &lt; value, wait.</span>
+    <span><b>Trader</b> rides the wiggle: which way next, after costs? 📈</span>
+  </div>
+</div>
+
+<div class="callout warn">
+  <strong>This is a <em>trading</em> course, on purpose.</strong> Over a short horizon, price moves are
+  dominated by who's buying and selling <em>right now</em> — not by slow changes in value. And on capital.com
+  you trade <strong>CFDs</strong>: leveraged, two-directional bets on the price <em>difference</em>, not
+  ownership of the asset. So we set deep valuation aside — a deliberate, explained choice, not a gap.
+</div>
+
+<div class="callout info">
+  🔁 <strong>The informed trader shows up twice.</strong> In Track 1 they're the faint <em>signal</em> you hunt —
+  the reason markets aren't perfectly random. In Track 2, once you're the market maker quoting prices, those same
+  informed traders pick you off — a hazard with a name: <strong>adverse selection</strong> (Lesson 21). Same
+  people, opposite seat.
+</div>
+
+<div class="recap">
+  <div class="r-title">✅ You can now say…</div>
+  <ul>
+    <li>An asset has a <strong>value</strong> (what it's worth) and a <strong>price</strong> (the last traded number) — not the same thing.</li>
+    <li>A price <strong>emerges</strong> from buyers' bids and sellers' asks meeting — supply vs demand — which is the <strong>order book</strong>.</li>
+    <li><strong>Investing</strong> asks <em>what is it worth?</em>; <strong>trading</strong> asks <em>which way does the price move?</em> This course is firmly trading.</li>
+    <li>A <strong>CFD</strong> is a leveraged, two-way bet on price <em>difference</em>, not ownership — which is <em>why</em> valuation is out of scope.</li>
+    <li>Markets are <em>nearly</em> random; the small real edges come from <strong>informed traders</strong> — Track 1's signal, Track 2's hazard.</li>
+  </ul>
+</div>
+
+<p style="margin-top:24px">
+  <a href="index.html">← Back to index</a> &nbsp;·&nbsp;
+  <a href="lesson_01.html"><strong>L1: What is a price? — start building →</strong></a>
+</p>
+
+</div>
+
+<footer class="site">
+  Built by <a href="https://github.com/fernfant">@fernfant</a> ·
+  <a href="https://github.com/fernfant/learn-trading">source on GitHub</a> · MIT licensed
+</footer>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  function gauss(){ let u=0,v=0; while(!u)u=Math.random(); while(!v)v=Math.random();
+    return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+
+  // ---- Demo 1: supply meets demand ----
+  const sc = $('sd'), sx = sc.getContext('2d');
+  const SW = sc.width, SH = sc.height, SPAD = 34, N = 12, SLOPE = 1.8;
+  let demandTop, supplyBot;
+
+  function sdReset(){ demandTop = 110; supplyBot = 90; drawSD(); }
+  const demandAt = i => demandTop - i*SLOPE;
+  const supplyAt = i => supplyBot + i*SLOPE;
+  function clearing(){
+    let k=-1;
+    for(let i=0;i<N;i++){ if(demandAt(i) >= supplyAt(i)) k=i; else break; }
+    if(k<0) return {price:(demandTop+supplyBot)/2, q:0};
+    return {price:(demandAt(k)+supplyAt(k))/2, q:k+1};
+  }
+  function drawSD(){
+    sx.clearRect(0,0,SW,SH);
+    const prices=[]; for(let i=0;i<N;i++){ prices.push(demandAt(i),supplyAt(i)); }
+    let lo=Math.min(...prices), hi=Math.max(...prices);
+    const pad=(hi-lo)*0.12; lo-=pad; hi+=pad;
+    const x = i => SPAD + i*(SW-2*SPAD)/(N-1);
+    const y = p => SPAD + (1-(p-lo)/(hi-lo))*(SH-2*SPAD);
+    // demand (down-sloping, green)
+    sx.lineWidth=2; sx.strokeStyle='#34d399'; sx.beginPath();
+    for(let i=0;i<N;i++){ i?sx.lineTo(x(i),y(demandAt(i))):sx.moveTo(x(i),y(demandAt(i))); } sx.stroke();
+    // supply (up-sloping, red)
+    sx.strokeStyle='#f87171'; sx.beginPath();
+    for(let i=0;i<N;i++){ i?sx.lineTo(x(i),y(supplyAt(i))):sx.moveTo(x(i),y(supplyAt(i))); } sx.stroke();
+    // labels
+    sx.font='12px ui-monospace,monospace'; sx.textAlign='left';
+    sx.fillStyle='#34d399'; sx.fillText('demand (buyers)', x(0)+4, y(demandAt(0))-6);
+    sx.fillStyle='#f87171'; sx.fillText('supply (sellers)', x(0)+4, y(supplyAt(0))+16);
+    // clearing point
+    const c=clearing();
+    if(c.q>0){
+      const px=x(c.q-1), py=y(c.price);
+      sx.strokeStyle='#f0b429'; sx.setLineDash([4,4]); sx.lineWidth=1;
+      sx.beginPath(); sx.moveTo(SPAD,py); sx.lineTo(SW-SPAD,py); sx.stroke(); sx.setLineDash([]);
+      sx.fillStyle='#f0b429'; sx.beginPath(); sx.arc(px,py,5,0,7); sx.fill();
+      sx.fillStyle='#f0b429'; sx.textAlign='right';
+      sx.fillText('price $'+c.price.toFixed(2), SW-SPAD-2, py-6);
+    }
+    // readout
+    const buyers = N + Math.round((demandTop-110)/2.5);
+    const sellers = N + Math.round((90-supplyBot)/2.5);
+    $('sd-price').textContent = '$'+c.price.toFixed(2);
+    const imb = buyers - sellers;
+    $('sd-detail').textContent = `${buyers} buyers · ${sellers} sellers`;
+    $('sd-note').innerHTML = imb>0
+      ? `buyers outnumber sellers → price pushed <span class="up3">up</span>`
+      : imb<0 ? `sellers outnumber buyers → price pushed <span class="down3">down</span>`
+      : `balanced market — the tug-of-war is even`;
+  }
+  $('add-buy').onclick = ()=>{ demandTop += 2.5; drawSD(); };
+  $('add-sell').onclick = ()=>{ supplyBot -= 2.5; drawSD(); };
+  $('sd-reset').onclick = sdReset;
+  sdReset();
+
+  // ---- Demo 2: value vs price ----
+  const vc = $('vp'), vx = vc.getContext('2d');
+  const VW = vc.width, VH = vc.height, VPAD = 30, MAXD = 60;
+  let value, vhist, valHist, day, informed=true, raf=null;
+
+  function vpReset(){
+    if(raf){cancelAnimationFrame(raf);raf=null;}
+    value=100; vhist=[100]; valHist=[100]; day=0; drawVP(); readVP();
+  }
+  function vpStep(){
+    if(day>=MAXD) return false;
+    let p = vhist[vhist.length-1];
+    p += gauss()*0.9;                          // the wander
+    if(informed) p += 0.18*(value - p);        // informed traders tug toward value
+    vhist.push(p); valHist.push(value); day++;
+    drawVP(); readVP(); return true;
+  }
+  function drawVP(){
+    vx.clearRect(0,0,VW,VH);
+    const all = vhist.concat(valHist);
+    let lo=Math.min(...all), hi=Math.max(...all);
+    if(hi-lo<8){ const c=(hi+lo)/2; lo=c-4; hi=c+4; }
+    const pad=(hi-lo)*0.15; lo-=pad; hi+=pad;
+    const x = i => VPAD + i*(VW-2*VPAD)/MAXD;
+    const y = p => VPAD + (1-(p-lo)/(hi-lo))*(VH-2*VPAD);
+    // value line (dashed gold)
+    vx.strokeStyle='#f0b429'; vx.setLineDash([5,4]); vx.lineWidth=1.5; vx.beginPath();
+    valHist.forEach((v,i)=>{ i?vx.lineTo(x(i),y(v)):vx.moveTo(x(i),y(v)); }); vx.stroke();
+    vx.setLineDash([]);
+    vx.fillStyle='#f0b429'; vx.font='11px ui-monospace,monospace'; vx.textAlign='left';
+    vx.fillText('value', x(valHist.length-1)-38, y(valHist[valHist.length-1])-6);
+    // price line
+    const end=vhist[vhist.length-1], v=valHist[valHist.length-1];
+    vx.strokeStyle = '#58a6ff'; vx.lineWidth=2; vx.beginPath();
+    vhist.forEach((p,i)=>{ i?vx.lineTo(x(i),y(p)):vx.moveTo(x(i),y(p)); }); vx.stroke();
+    vx.fillStyle='#58a6ff'; vx.beginPath(); vx.arc(x(vhist.length-1),y(end),4,0,7); vx.fill();
+    vx.fillText('price', x(vhist.length-1)-38, y(end)+16);
+  }
+  function readVP(){
+    const p=vhist[vhist.length-1], gap=p-value;
+    $('vp-value').textContent='$'+value.toFixed(2);
+    $('vp-price').textContent='$'+p.toFixed(2);
+    $('vp-gap').innerHTML = (Math.abs(gap)<0.005?'$0.00':
+      (gap>0?'<span class="up3">+$'+gap.toFixed(2)+' (price above value)</span>'
+            :'<span class="down3">-$'+Math.abs(gap).toFixed(2)+' (price below value)</span>'));
+  }
+  $('good').onclick=()=>{ value+=8; if(day===0){valHist=[value];vhist=[vhist[0]];} drawVP(); readVP(); };
+  $('bad').onclick=()=>{ value-=8; if(day===0){valHist=[value];vhist=[vhist[0]];} drawVP(); readVP(); };
+  $('vp-step').onclick=()=>vpStep();
+  $('vp-reset').onclick=vpReset;
+  $('vp-run').onclick=()=>{
+    if(raf){cancelAnimationFrame(raf);raf=null;return;}
+    if(day>=MAXD) vpReset();
+    const loop=()=>{ if(vpStep()) raf=requestAnimationFrame(loop); else raf=null; };
+    loop();
+  };
+  $('inf-toggle').onclick=()=>{
+    informed=!informed;
+    $('inf-toggle').classList.toggle('on',informed);
+    $('inf-label').textContent='informed traders: '+(informed?'ON':'OFF');
+  };
+  vpReset();
+})();
+</script>
+
+</body>
+</html>

@@ -30,6 +30,7 @@ long/short → leverage → orders → risk → honest metrics, after costs.
 
 | # | Concept | Code | Walkthrough |
 |---|---------|------|-------------|
+| 0 | Foundations — what an asset is, where price comes from, valuation vs trading | _(no code — read first)_ | [`00_foundations.md`](00_foundations.md) ✅ |
 | 1 | What is a price? (the random walk; why you can't predict it) | [`01_what_is_a_price.py`](01_what_is_a_price.py) | [`01_walkthrough.md`](01_walkthrough.md) ✅ |
 | 2 | Bid, ask & the spread — there are always two prices | [`02_bid_ask_spread.py`](02_bid_ask_spread.py) | [`02_walkthrough.md`](02_walkthrough.md) ✅ |
 | 3 | Your first trade: long **and** short (CFDs) | [`03_long_and_short.py`](03_long_and_short.py) | [`03_walkthrough.md`](03_walkthrough.md) ✅ |
